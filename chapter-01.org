@@ -22,8 +22,7 @@ that changes with the seasons. Just as your garden transforms from bare
 earth in spring to abundance in summer, the DOM transforms based on user 
 interactions and data changes.
 
-Traditional JavaScript gardening (vanilla JS) requires you to manually 
-tend every plant:
+Traditional JavaScript gardening requires you to tend every plant manually:
 
 #+BEGIN_SRC javascript
 // The old way: hand-watering each plant

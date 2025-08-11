@@ -220,10 +220,11 @@ See [[./LICENSE][LICENSE]] file for details.
 
 * 🙏 Acknowledgments
 
-- *Evan You* and the Vue.js team for creating such fertile ground
-- *The Vue Community* for being welcoming gardeners
-- *Claude (Anthropic)* for being an enthusiastic co-gardener
-- *You*, for choosing to learn Vue through this unconventional path
+- *Evan You* and the Vue.js team for creating such fertile ground.
+- *The Vue Community* for being welcoming gardeners.
+- *Claude (Anthropic)* for being an enthusiastic co-gardener.
+- *ChatGPT* for editing and polishing the manuscript.
+- *You*, for choosing to learn Vue through this unconventional path.
 
 * 🌟 Star History
 

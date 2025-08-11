@@ -9,14 +9,13 @@
 
 A gentle introduction to Vue.js through the metaphor of gardening,
 where components bloom, state flows like water, and applications
-grow strong with proper care and attention.
+thrive under careful cultivation.
 
 * Copyright
 
 Copyright © 2025
 
-This book is a collaborative work, created with care and attention
-like a well-tended garden. 
+This book is a collaborative work created with care and attention, like a well-tended garden.
 
 All code examples in this book are released under the MIT License.
 You are free to plant these seeds in your own digital gardens.
@@ -32,12 +31,12 @@ may your Vue gardens flourish.
 
 * Acknowledgments
 
-Like any garden, this book grew with the help of many:
+Like any garden, this book flourished thanks to many hands:
 
-- The Vue.js core team, who created the fertile framework upon which we build
-- The open-source community, whose shared knowledge is like compost enriching our soil
-- Every developer who asked "but why?" and helped us dig deeper
-- You, dear reader, for choosing to begin this journey
+- The Vue.js core team, who created the fertile framework we build upon.
+- The open-source community, whose shared knowledge enriches our soil like compost.
+- Every developer who asked "but why?" and helped us dig deeper.
+- You, dear reader, for choosing to begin this journey.
 
 * Table of Contents
 
