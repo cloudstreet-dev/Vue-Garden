@@ -3,8 +3,7 @@
 
 * Appendix A: Garden Glossary
 
-A gardener's vocabulary grows with experience. Here are the terms we've 
-cultivated throughout our journey:
+A gardener's vocabulary grows with experience; here are the terms we've cultivated throughout our journey:
 
 ** Garden Terms → Vue Terms
 

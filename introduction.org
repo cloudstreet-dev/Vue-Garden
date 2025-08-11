@@ -5,8 +5,7 @@
 
 Picture this: You're standing at the edge of an empty plot of land, 
 tools in hand, seeds in your pocket, and endless possibilities ahead. 
-That feeling—equal parts excitement and "where do I even begin?"—is 
-exactly where every gardener starts. And it's where every Vue.js 
+That feeling—part excitement, part "where do I even begin?"—is where every gardener starts. And it's where every Vue.js
 developer begins too.
 
 Welcome to Vue Garden, where we'll grow web applications the way 
