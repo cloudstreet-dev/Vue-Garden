@@ -1,0 +1,1340 @@
+#+TITLE: Chapter 2: Planting Seeds
+#+SUBTITLE: Components - The Living Plants of Your Vue Garden
+
+* Chapter 2: Planting Seeds (Components)
+
+In Chapter 1, we prepared our soil and sprouted our first seedlings in a 
+single garden bed. But imagine trying to grow everything—tomatoes, herbs, 
+flowers, vegetables—all in one tangled patch. It would be chaos.
+
+Real gardeners know better. They organize their gardens into purposeful 
+sections: herb spirals here, tomato cages there, flower borders along 
+the edges. Each area has its own purpose, its own needs, its own beauty.
+
+In Vue, we call these organized sections *components*. They're the 
+individual plants that, together, create your garden's ecosystem.
+
+* Understanding Seeds (What Are Components?)
+
+A component is like a seed packet. Inside that packet is everything needed 
+to grow a particular plant: the genetic code (template), the growth 
+instructions (logic), and the appearance details (styles).
+
+** The Anatomy of a Seed
+
+When you buy tomato seeds, the packet contains:
+- The seeds themselves (the template/structure)
+- Growing instructions (the logic/behavior)
+- A picture of what they'll become (the styles/appearance)
+- Information about what conditions they need (props/inputs)
+- What they'll produce (events/outputs)
+
+A Vue component packages information the same way:
+
+#+BEGIN_SRC javascript
+// A component is like a seed packet
+const TomatoPlant = {
+    // What it needs to grow (props)
+    props: ['variety', 'size'],
+    
+    // Its internal state (data)
+    data() {
+        return {
+            height: 0,
+            fruits: 0,
+            isHealthy: true
+        }
+    },
+    
+    // What it looks like (template)
+    template: `
+        <div class="tomato-plant">
+            <h3>{{ variety }} Tomato</h3>
+            <p>Height: {{ height }}cm</p>
+            <p>Fruits: {{ fruits }}</p>
+        </div>
+    `,
+    
+    // What it can do (methods)
+    methods: {
+        grow() {
+            this.height += 10;
+        },
+        produceFruit() {
+            if (this.isHealthy) {
+                this.fruits++;
+            }
+        }
+    }
+}
+#+END_SRC
+
+** Why Seeds, Not Cuttings?
+
+You might wonder: why not just copy-paste code like taking cuttings from 
+a plant? Here's why components (seeds) are better:
+
+1. *Consistency*: Every tomato from the same seed packet grows similarly
+2. *Reusability*: Plant the same seeds in multiple spots
+3. *Independence*: Each plant maintains its own health and growth
+4. *Predictability*: You know what each seed will produce
+
+* Your First Seed Packet (Creating Components)
+
+Let's create our first proper component—a flower that can be planted 
+anywhere in your garden:
+
+#+BEGIN_SRC html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Component Garden</title>
+    <style>
+        #app {
+            padding: 20px;
+            background: linear-gradient(to bottom, #87CEEB, #90EE90);
+            min-height: 100vh;
+        }
+        
+        .flower {
+            display: inline-block;
+            margin: 10px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .flower:hover {
+            transform: scale(1.1);
+        }
+        
+        .flower-icon {
+            font-size: 48px;
+            margin: 10px;
+        }
+        
+        .wilted {
+            opacity: 0.5;
+            transform: rotate(45deg);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>🌻 My Component Garden</h1>
+        
+        <!-- Plant multiple flowers from the same component "seed" -->
+        <garden-flower 
+            type="Rose" 
+            color="red"
+            :initial-water="100">
+        </garden-flower>
+        
+        <garden-flower 
+            type="Sunflower" 
+            color="yellow"
+            :initial-water="80">
+        </garden-flower>
+        
+        <garden-flower 
+            type="Lily" 
+            color="white"
+            :initial-water="60">
+        </garden-flower>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        const { createApp } = Vue;
+        
+        // Define our Flower component (seed packet)
+        const GardenFlower = {
+            // What this flower accepts from outside
+            props: {
+                type: String,
+                color: String,
+                initialWater: {
+                    type: Number,
+                    default: 50
+                }
+            },
+            
+            // The flower's internal state
+            data() {
+                return {
+                    waterLevel: this.initialWater,
+                    isWilted: false,
+                    daysSincePlanted: 0
+                }
+            },
+            
+            // The flower's appearance
+            template: `
+                <div class="flower" :style="{ borderColor: color }">
+                    <div class="flower-icon" :class="{ wilted: isWilted }">
+                        {{ flowerEmoji }}
+                    </div>
+                    <h3>{{ type }}</h3>
+                    <p>Water: {{ waterLevel }}%</p>
+                    <p>Age: {{ daysSincePlanted }} days</p>
+                    <button @click="water">💧 Water</button>
+                    <button @click="passDay">⏰ Next Day</button>
+                </div>
+            `,
+            
+            // Calculated properties
+            computed: {
+                flowerEmoji() {
+                    const emojis = {
+                        'Rose': '🌹',
+                        'Sunflower': '🌻',
+                        'Lily': '🌷',
+                        'Daisy': '🌼'
+                    };
+                    return this.isWilted ? '🥀' : (emojis[this.type] || '🌸');
+                }
+            },
+            
+            // The flower's behaviors
+            methods: {
+                water() {
+                    this.waterLevel = Math.min(100, this.waterLevel + 20);
+                    if (this.waterLevel > 30) {
+                        this.isWilted = false;
+                    }
+                },
+                
+                passDay() {
+                    this.daysSincePlanted++;
+                    this.waterLevel = Math.max(0, this.waterLevel - 15);
+                    
+                    if (this.waterLevel < 30) {
+                        this.isWilted = true;
+                    }
+                    
+                    if (this.waterLevel === 0) {
+                        alert(`Oh no! Your ${this.type} needs water urgently!`);
+                    }
+                }
+            },
+            
+            // Lifecycle: when the flower is planted
+            mounted() {
+                console.log(`🌱 A ${this.type} has been planted!`);
+            }
+        };
+        
+        // Create the garden app
+        createApp({
+            components: {
+                GardenFlower  // Register our flower component
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
+#+END_SRC
+
+** What's Growing Here?
+
+Notice the magic: we defined our flower component once, but planted three 
+different flowers. Each one:
+- Maintains its own water level
+- Ages independently
+- Can be watered separately
+- Wilts based on its own conditions
+
+This is the power of components—define once, plant anywhere.
+
+* Single Seeds vs. Seed Packets (Single-File Components)
+
+So far, we've been defining components inline, like scattering seeds by 
+hand. But professional gardeners use organized seed packets. In Vue, these 
+are called Single-File Components (SFCs).
+
+** The Professional Seed Packet
+
+A Single-File Component looks like this:
+
+#+BEGIN_SRC vue
+<!-- Flower.vue - A complete seed packet -->
+<template>
+  <div class="flower-container">
+    <div class="stem"></div>
+    <div class="bloom" :style="{ backgroundColor: color }">
+      {{ petals }} petals
+    </div>
+    <div class="leaves">{{ healthStatus }}</div>
+    
+    <div class="controls">
+      <button @click="water">Water</button>
+      <button @click="fertilize">Fertilize</button>
+      <button @click="prune">Prune</button>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'GardenFlower',
+  
+  props: {
+    variety: {
+      type: String,
+      required: true
+    },
+    color: {
+      type: String,
+      default: 'pink'
+    }
+  },
+  
+  data() {
+    return {
+      petals: 5,
+      health: 100,
+      waterLevel: 50,
+      nutrients: 50
+    }
+  },
+  
+  computed: {
+    healthStatus() {
+      if (this.health > 80) return '🌿 Thriving';
+      if (this.health > 50) return '🍃 Healthy';
+      if (this.health > 20) return '🍂 Struggling';
+      return '🥀 Wilting';
+    }
+  },
+  
+  methods: {
+    water() {
+      this.waterLevel = Math.min(100, this.waterLevel + 20);
+      this.updateHealth();
+    },
+    
+    fertilize() {
+      this.nutrients = Math.min(100, this.nutrients + 30);
+      this.petals = Math.min(12, this.petals + 1);
+      this.updateHealth();
+    },
+    
+    prune() {
+      this.petals = Math.max(5, this.petals - 2);
+      this.health = Math.min(100, this.health + 10);
+    },
+    
+    updateHealth() {
+      this.health = Math.floor((this.waterLevel + this.nutrients) / 2);
+    }
+  }
+}
+</script>
+
+<style scoped>
+.flower-container {
+  display: inline-block;
+  padding: 20px;
+  margin: 10px;
+  background: #f0f0f0;
+  border-radius: 10px;
+}
+
+.stem {
+  width: 4px;
+  height: 60px;
+  background: green;
+  margin: 0 auto;
+}
+
+.bloom {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  margin: 0 auto 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+}
+
+.leaves {
+  text-align: center;
+  margin: 10px 0;
+}
+
+.controls {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+button {
+  padding: 5px 10px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #45a049;
+}
+</style>
+#+END_SRC
+
+** The Three Sections of a Seed Packet
+
+1. *Template*: The DNA - what the plant looks like
+2. *Script*: The growth instructions - how it behaves
+3. *Style*: The characteristics - its unique appearance
+
+The =scoped= attribute on styles means these styles only affect this 
+component—like how a rose's genes only affect the rose, not the 
+neighboring daisies.
+
+* Transplanting (Props and Events)
+
+Plants communicate with their environment. They take in water and nutrients 
+(props) and produce flowers and fruits (events). Components work the same way.
+
+** Props: Nutrients from the Parent Soil
+
+Props are how parent components pass data down to their children—like 
+nutrients flowing from soil to roots:
+
+#+BEGIN_SRC javascript
+// Parent component (the garden)
+const Garden = {
+    data() {
+        return {
+            season: 'Spring',
+            temperature: 72,
+            rainfall: 'moderate'
+        }
+    },
+    template: `
+        <div>
+            <!-- Pass nutrients (props) to the plant -->
+            <tomato-plant 
+                :season="season"
+                :temperature="temperature"
+                :water-amount="rainfall"
+            />
+        </div>
+    `
+}
+
+// Child component (the plant)
+const TomatoPlant = {
+    props: {
+        season: String,
+        temperature: Number,
+        waterAmount: String
+    },
+    
+    computed: {
+        growthRate() {
+            // Growth depends on the props received
+            if (this.season === 'Summer' && this.temperature > 70) {
+                return 'rapid';
+            }
+            return 'normal';
+        }
+    },
+    
+    template: `
+        <div>
+            Growing in {{ season }} at {{ temperature }}°F
+            Growth rate: {{ growthRate }}
+        </div>
+    `
+}
+#+END_SRC
+
+** Props Rules: The Laws of Nature
+
+Props follow natural laws, just like gardens:
+
+1. *One-way flow*: Nutrients flow from soil to plant, not backward
+2. *Type checking*: A plant expecting nitrogen can't use sunlight as nitrogen
+3. *Required vs. optional*: Some plants need full sun (required), others 
+   tolerate shade (optional)
+4. *Defaults*: When not specified, assume normal conditions
+
+#+BEGIN_SRC javascript
+props: {
+    // Required nutrient
+    sunlight: {
+        type: String,
+        required: true
+    },
+    
+    // Optional with default
+    water: {
+        type: Number,
+        default: 50  // Default moisture level
+    },
+    
+    // With validation
+    temperature: {
+        type: Number,
+        validator: (value) => {
+            // Plants can't grow in extreme temperatures
+            return value > -20 && value < 120;
+        }
+    }
+}
+#+END_SRC
+
+** Events: Fruits of Your Labor
+
+When a plant produces fruit or flowers, it's communicating upward. In Vue, 
+components emit events to tell their parents something happened:
+
+#+BEGIN_SRC javascript
+// Child component - The fruit-bearing plant
+const FruitPlant = {
+    data() {
+        return {
+            fruitCount: 0
+        }
+    },
+    
+    methods: {
+        growFruit() {
+            this.fruitCount++;
+            
+            // Emit an event when fruit is ready
+            this.$emit('fruit-ready', {
+                type: 'tomato',
+                count: this.fruitCount,
+                ripeness: 'perfect'
+            });
+        },
+        
+        dropFruit() {
+            if (this.fruitCount > 0) {
+                // Emit event with the fruit data
+                this.$emit('harvest', this.fruitCount);
+                this.fruitCount = 0;
+            }
+        }
+    },
+    
+    template: `
+        <div class="plant">
+            <p>Fruits on plant: {{ fruitCount }}</p>
+            <button @click="growFruit">Grow Fruit</button>
+            <button @click="dropFruit">Harvest All</button>
+        </div>
+    `
+}
+
+// Parent component - The garden
+const Garden = {
+    data() {
+        return {
+            totalHarvest: 0,
+            harvestLog: []
+        }
+    },
+    
+    methods: {
+        collectFruit(fruitData) {
+            console.log('Fruit is ready!', fruitData);
+            this.harvestLog.push(fruitData);
+        },
+        
+        addToBasket(count) {
+            this.totalHarvest += count;
+        }
+    },
+    
+    template: `
+        <div>
+            <h2>Garden Harvest: {{ totalHarvest }} fruits</h2>
+            
+            <!-- Listen for events from the plant -->
+            <fruit-plant 
+                @fruit-ready="collectFruit"
+                @harvest="addToBasket"
+            />
+        </div>
+    `
+}
+#+END_SRC
+
+* The Garden Bed System (Component Organization)
+
+As your garden grows, organization becomes crucial. You don't plant 
+vegetables randomly—you organize them into beds, rows, and sections.
+
+** Organizing Your Seed Collection
+
+Here's how to structure your component garden:
+
+#+BEGIN_SRC
+my-vue-garden/
+├── components/
+│   ├── plants/
+│   │   ├── TomatoPlant.vue
+│   │   ├── Sunflower.vue
+│   │   └── HerbSpiral.vue
+│   ├── garden-features/
+│   │   ├── GardenBed.vue
+│   │   ├── CompostBin.vue
+│   │   └── WaterBarrel.vue
+│   ├── tools/
+│   │   ├── WateringCan.vue
+│   │   ├── Pruners.vue
+│   │   └── SeedPacket.vue
+│   └── shared/
+│       ├── GrowthIndicator.vue
+│       └── SeasonDisplay.vue
+├── App.vue  (The main garden)
+└── main.js  (The gardener)
+#+END_SRC
+
+** Component Communication Patterns
+
+Like plants in a garden ecosystem, components communicate in patterns:
+
+*** Parent to Child: Providing Resources
+The garden provides water, sunlight, and nutrients to plants:
+
+#+BEGIN_SRC vue
+<!-- GardenBed.vue (Parent) -->
+<template>
+  <div class="garden-bed">
+    <plant 
+      v-for="plant in plants" 
+      :key="plant.id"
+      :water="waterLevel"
+      :sunlight="currentSunlight"
+      :nutrients="soilQuality"
+    />
+  </div>
+</template>
+#+END_SRC
+
+*** Child to Parent: Signaling Needs
+Plants signal when they need attention:
+
+#+BEGIN_SRC vue
+<!-- Plant.vue (Child) -->
+<template>
+  <div class="plant" @click="requestWater">
+    <!-- Plant visual -->
+  </div>
+</template>
+
+<script>
+export default {
+  methods: {
+    requestWater() {
+      if (this.waterLevel < 30) {
+        this.$emit('needs-water', {
+          plantId: this.id,
+          urgency: 'high'
+        });
+      }
+    }
+  }
+}
+</script>
+#+END_SRC
+
+*** Sibling Communication: Through the Garden
+Plants don't talk directly to each other—they communicate through the 
+garden (parent):
+
+#+BEGIN_SRC javascript
+// The Garden manages communication between plants
+const Garden = {
+    data() {
+        return {
+            sharedResources: {
+                water: 100,
+                compost: 50
+            }
+        }
+    },
+    
+    methods: {
+        // One plant's event affects others
+        onPlantWilted(plantId) {
+            // Redirect water to struggling plant
+            this.redirectWaterTo(plantId);
+        },
+        
+        onPlantThriving(plantId) {
+            // Share the success
+            this.spreadSeeds(plantId);
+        }
+    }
+}
+#+END_SRC
+
+* Component Lifecycles: From Seed to Compost
+
+Every plant has a lifecycle: germination, growth, flowering, fruiting, and 
+eventually, returning to the earth. Vue components have a similar journey:
+
+#+BEGIN_SRC javascript
+export default {
+    // Before the seed is planted
+    beforeCreate() {
+        console.log('🌰 Seed selected from packet');
+    },
+    
+    // Seed is planted but hasn't sprouted
+    created() {
+        console.log('🌱 Seed planted in soil');
+        // Good time to fetch initial data (water, nutrients)
+    },
+    
+    // About to sprout
+    beforeMount() {
+        console.log('🌿 Sprout pushing through soil');
+    },
+    
+    // Sprouted and visible
+    mounted() {
+        console.log('🌱 Plant visible above ground!');
+        // DOM is ready - good time to set up garden decorations
+    },
+    
+    // Before any growth change
+    beforeUpdate() {
+        console.log('📈 About to grow');
+    },
+    
+    // After growing
+    updated() {
+        console.log('🌿 Growth complete');
+    },
+    
+    // Before returning to compost
+    beforeUnmount() {
+        console.log('🍂 Preparing for winter');
+        // Clean up: cancel timers, save state
+    },
+    
+    // Returned to the earth
+    unmounted() {
+        console.log('🍄 Returned to compost');
+        // Component is completely removed
+    }
+}
+#+END_SRC
+
+** Practical Lifecycle Gardening
+
+Here's when to use each lifecycle hook in your garden:
+
+#+BEGIN_SRC vue
+<script>
+export default {
+    data() {
+        return {
+            growthTimer: null,
+            currentHeight: 0,
+            weatherData: null
+        }
+    },
+    
+    created() {
+        // Fetch initial data - like checking soil conditions
+        this.fetchWeatherData();
+    },
+    
+    mounted() {
+        // Start ongoing processes - like automatic watering
+        this.growthTimer = setInterval(() => {
+            this.currentHeight += 1;
+        }, 1000);
+        
+        // Access the actual DOM element (the physical plant)
+        this.$el.classList.add('planted');
+    },
+    
+    beforeUnmount() {
+        // Clean up - like storing tools for winter
+        clearInterval(this.growthTimer);
+        this.saveGrowthData();
+    }
+}
+</script>
+#+END_SRC
+
+* A Complete Garden Example
+
+Let's put it all together with a complete, interactive garden using 
+multiple components:
+
+#+BEGIN_SRC html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Complete Component Garden</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        #app {
+            min-height: 100vh;
+            background: linear-gradient(to bottom, #87CEEB 0%, #8FBC8F 100%);
+            padding: 20px;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        .garden-stats {
+            background: rgba(255,255,255,0.9);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .garden-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .garden-plot {
+            background: #8B4513;
+            padding: 15px;
+            border-radius: 10px;
+            border: 3px solid #654321;
+            position: relative;
+        }
+        
+        .plant-spot {
+            background: #D2691E;
+            border: 2px dashed #A0522D;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .plant-visual {
+            font-size: 48px;
+            margin: 10px 0;
+        }
+        
+        .plant-info {
+            background: rgba(255,255,255,0.9);
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        
+        .controls {
+            margin-top: 10px;
+        }
+        
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            margin: 2px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .seed-selector {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .seed-packet {
+            display: inline-block;
+            padding: 10px;
+            margin: 5px;
+            background: #FFF8DC;
+            border: 2px solid #DEB887;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .seed-packet.selected {
+            background: #FFE4B5;
+            border-color: #FF8C00;
+        }
+        
+        .season-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>🌻 The Complete Component Garden</h1>
+        
+        <!-- Garden Statistics Dashboard -->
+        <garden-stats 
+            :total-plants="plants.length"
+            :water-level="waterSupply"
+            :season="currentSeason"
+            @season-change="changeSeason">
+        </garden-stats>
+        
+        <!-- Seed Selection -->
+        <seed-selector 
+            :available-seeds="seedTypes"
+            v-model="selectedSeed">
+        </seed-selector>
+        
+        <!-- The Garden Grid -->
+        <div class="garden-grid">
+            <garden-plot 
+                v-for="(plot, index) in gardenPlots" 
+                :key="index"
+                :plot-id="index"
+                :plant="plot.plant"
+                :selected-seed="selectedSeed"
+                @plant-seed="plantSeed"
+                @water-plant="waterPlant"
+                @harvest="harvestPlant">
+            </garden-plot>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        const { createApp } = Vue;
+        
+        // Garden Statistics Component
+        const GardenStats = {
+            props: ['totalPlants', 'waterLevel', 'season'],
+            
+            template: `
+                <div class="garden-stats">
+                    <h2>Garden Dashboard</h2>
+                    <p>🌱 Total Plants: {{ totalPlants }}</p>
+                    <p>💧 Water Supply: {{ waterLevel }}%</p>
+                    <p>🗓️ Season: {{ season }}</p>
+                    <div>
+                        <button @click="$emit('season-change', 'Spring')">🌸 Spring</button>
+                        <button @click="$emit('season-change', 'Summer')">☀️ Summer</button>
+                        <button @click="$emit('season-change', 'Fall')">🍂 Fall</button>
+                        <button @click="$emit('season-change', 'Winter')">❄️ Winter</button>
+                    </div>
+                </div>
+            `
+        };
+        
+        // Seed Selector Component
+        const SeedSelector = {
+            props: ['availableSeeds', 'modelValue'],
+            
+            emits: ['update:modelValue'],
+            
+            template: `
+                <div class="seed-selector">
+                    <h3>Choose Your Seeds:</h3>
+                    <div>
+                        <span 
+                            v-for="seed in availableSeeds"
+                            :key="seed.name"
+                            class="seed-packet"
+                            :class="{ selected: modelValue === seed.name }"
+                            @click="$emit('update:modelValue', seed.name)">
+                            {{ seed.emoji }} {{ seed.name }}
+                        </span>
+                    </div>
+                </div>
+            `
+        };
+        
+        // Individual Garden Plot Component
+        const GardenPlot = {
+            props: ['plotId', 'plant', 'selectedSeed'],
+            
+            emits: ['plant-seed', 'water-plant', 'harvest'],
+            
+            computed: {
+                isEmpty() {
+                    return !this.plant;
+                },
+                
+                plantEmoji() {
+                    if (!this.plant) return '🌱';
+                    
+                    const stages = {
+                        seed: '🌰',
+                        sprout: '🌱',
+                        growing: '🌿',
+                        mature: this.plant.emoji || '🌳',
+                        wilting: '🥀'
+                    };
+                    
+                    return stages[this.plant.stage] || '🌱';
+                },
+                
+                canHarvest() {
+                    return this.plant && this.plant.stage === 'mature';
+                }
+            },
+            
+            template: `
+                <div class="garden-plot">
+                    <div class="plant-spot">
+                        <div v-if="isEmpty">
+                            <p>Empty Plot</p>
+                            <button 
+                                @click="$emit('plant-seed', plotId, selectedSeed)"
+                                :disabled="!selectedSeed">
+                                🌱 Plant {{ selectedSeed || 'Select Seed' }}
+                            </button>
+                        </div>
+                        
+                        <div v-else>
+                            <div class="plant-visual">{{ plantEmoji }}</div>
+                            <div class="plant-info">
+                                <strong>{{ plant.type }}</strong><br>
+                                Stage: {{ plant.stage }}<br>
+                                Water: {{ plant.water }}%
+                            </div>
+                            <div class="controls">
+                                <button @click="$emit('water-plant', plotId)">
+                                    💧 Water
+                                </button>
+                                <button 
+                                    @click="$emit('harvest', plotId)"
+                                    :disabled="!canHarvest">
+                                    🌾 Harvest
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `
+        };
+        
+        // Main App
+        createApp({
+            components: {
+                GardenStats,
+                SeedSelector,
+                GardenPlot
+            },
+            
+            data() {
+                return {
+                    waterSupply: 100,
+                    currentSeason: 'Spring',
+                    selectedSeed: null,
+                    gardenPlots: Array(6).fill(null).map(() => ({ plant: null })),
+                    seedTypes: [
+                        { name: 'Tomato', emoji: '🍅', growthTime: 3 },
+                        { name: 'Sunflower', emoji: '🌻', growthTime: 4 },
+                        { name: 'Rose', emoji: '🌹', growthTime: 5 },
+                        { name: 'Carrot', emoji: '🥕', growthTime: 3 },
+                        { name: 'Corn', emoji: '🌽', growthTime: 4 }
+                    ],
+                    plants: []
+                }
+            },
+            
+            methods: {
+                plantSeed(plotId, seedType) {
+                    const seed = this.seedTypes.find(s => s.name === seedType);
+                    if (!seed) return;
+                    
+                    const newPlant = {
+                        type: seedType,
+                        emoji: seed.emoji,
+                        stage: 'seed',
+                        water: 50,
+                        growthTime: seed.growthTime,
+                        daysGrown: 0
+                    };
+                    
+                    this.gardenPlots[plotId].plant = newPlant;
+                    this.plants.push(newPlant);
+                    
+                    // Start growth cycle
+                    this.startGrowth(plotId);
+                },
+                
+                waterPlant(plotId) {
+                    const plant = this.gardenPlots[plotId].plant;
+                    if (plant && this.waterSupply > 0) {
+                        plant.water = Math.min(100, plant.water + 30);
+                        this.waterSupply = Math.max(0, this.waterSupply - 10);
+                        
+                        // Watering helps growth
+                        if (plant.stage === 'wilting') {
+                            plant.stage = 'growing';
+                        }
+                    }
+                },
+                
+                harvestPlant(plotId) {
+                    const plant = this.gardenPlots[plotId].plant;
+                    if (plant && plant.stage === 'mature') {
+                        alert(`Harvested a beautiful ${plant.type}! ${plant.emoji}`);
+                        
+                        // Remove plant and reset plot
+                        const index = this.plants.indexOf(plant);
+                        if (index > -1) {
+                            this.plants.splice(index, 1);
+                        }
+                        this.gardenPlots[plotId].plant = null;
+                    }
+                },
+                
+                startGrowth(plotId) {
+                    const growthInterval = setInterval(() => {
+                        const plant = this.gardenPlots[plotId].plant;
+                        if (!plant) {
+                            clearInterval(growthInterval);
+                            return;
+                        }
+                        
+                        // Decrease water over time
+                        plant.water = Math.max(0, plant.water - 10);
+                        
+                        // Growth stages based on water
+                        if (plant.water < 20) {
+                            plant.stage = 'wilting';
+                        } else {
+                            plant.daysGrown++;
+                            
+                            if (plant.daysGrown === 1) {
+                                plant.stage = 'sprout';
+                            } else if (plant.daysGrown === 2) {
+                                plant.stage = 'growing';
+                            } else if (plant.daysGrown >= plant.growthTime) {
+                                plant.stage = 'mature';
+                                clearInterval(growthInterval);
+                            }
+                        }
+                        
+                        // Plant dies if no water
+                        if (plant.water === 0) {
+                            plant.stage = 'wilting';
+                            setTimeout(() => {
+                                if (plant.water === 0) {
+                                    this.gardenPlots[plotId].plant = null;
+                                    clearInterval(growthInterval);
+                                }
+                            }, 3000);
+                        }
+                    }, 2000); // Every 2 seconds = 1 garden day
+                },
+                
+                changeSeason(season) {
+                    this.currentSeason = season;
+                    
+                    // Seasons affect the garden
+                    if (season === 'Spring') {
+                        this.waterSupply = 100;
+                        console.log('🌸 Spring rains refill your water supply!');
+                    } else if (season === 'Summer') {
+                        console.log('☀️ Hot summer - plants need more water!');
+                    } else if (season === 'Winter') {
+                        console.log('❄️ Winter - growth slows down');
+                    }
+                }
+            },
+            
+            mounted() {
+                console.log('🌱 Your component garden is ready!');
+                console.log('Select a seed type and click on empty plots to plant.');
+                
+                // Slowly refill water supply
+                setInterval(() => {
+                    this.waterSupply = Math.min(100, this.waterSupply + 5);
+                }, 5000);
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
+#+END_SRC
+
+* Component Patterns: Garden Design Principles
+
+As your garden matures, you'll discover patterns that work well:
+
+** The Container Garden Pattern
+
+Group related components like container gardens:
+
+#+BEGIN_SRC javascript
+// Container component that manages a collection
+const HerbGarden = {
+    components: { HerbPlant },
+    
+    data() {
+        return {
+            herbs: ['Basil', 'Oregano', 'Thyme', 'Sage']
+        }
+    },
+    
+    template: `
+        <div class="herb-container">
+            <h3>Herb Spiral</h3>
+            <herb-plant 
+                v-for="herb in herbs" 
+                :key="herb"
+                :variety="herb"
+            />
+        </div>
+    `
+}
+#+END_SRC
+
+** The Companion Planting Pattern
+
+Some components work better together:
+
+#+BEGIN_SRC javascript
+// Components that enhance each other
+const TomatoAndBasil = {
+    components: { TomatoPlant, BasilPlant },
+    
+    template: `
+        <div class="companion-planting">
+            <!-- Basil repels pests from tomatoes -->
+            <tomato-plant @pest-detected="basilRepelPests" />
+            <basil-plant ref="basil" />
+        </div>
+    `,
+    
+    methods: {
+        basilRepelPests() {
+            this.$refs.basil.releaseScent();
+        }
+    }
+}
+#+END_SRC
+
+** The Crop Rotation Pattern
+
+Swap components based on conditions:
+
+#+BEGIN_SRC javascript
+// Dynamic component swapping
+const GardenBed = {
+    data() {
+        return {
+            currentCrop: 'Lettuce',
+            season: 'Spring'
+        }
+    },
+    
+    computed: {
+        plantComponent() {
+            const seasonalPlants = {
+                Spring: 'lettuce-plant',
+                Summer: 'tomato-plant',
+                Fall: 'pumpkin-plant',
+                Winter: 'cover-crop'
+            };
+            return seasonalPlants[this.season];
+        }
+    },
+    
+    template: `
+        <div class="garden-bed">
+            <component :is="plantComponent" />
+        </div>
+    `
+}
+#+END_SRC
+
+* Exercises: Cultivating Your Component Garden
+
+** Exercise 1: The Flower Shop
+Create a component system for a flower shop:
+- A =FlowerBouquet= component that contains multiple flowers
+- Individual flower components with different colors and types
+- A =PriceCalculator= component that totals the bouquet cost
+- Events when flowers are added or removed
+
+** Exercise 2: The Vegetable Garden Planner
+Build a garden planning tool:
+- =GardenGrid= component with multiple plots
+- =VegetablePlant= components with different space requirements
+- Validation to prevent overcrowding
+- Companion planting suggestions
+
+** Exercise 3: The Greenhouse Monitor
+Create a greenhouse monitoring system:
+- =TemperatureSensor= component showing current temperature
+- =HumidityGauge= component for moisture levels
+- =PlantHealth= component that reacts to temperature and humidity
+- Alert system when conditions are poor
+
+** Exercise 4: The Seed Library
+Build a seed packet organizer:
+- =SeedPacket= component with planting instructions
+- =SeedCategory= components for organization
+- Search and filter functionality
+- Planting calendar based on current date
+
+* Closing Thoughts
+
+You've learned to work with components—the true building blocks of Vue 
+applications. Like a gardener who's mastered propagation, you can now:
+
+- Create reusable components (seed packets)
+- Pass data through props (nutrients)
+- Emit events (harvest signals)
+- Organize component hierarchies (garden layouts)
+- Understand component lifecycles (growing seasons)
+
+Your garden has evolved from a single plot to an organized system of 
+specialized growing areas. Each component has its purpose, its own 
+state, and its way of interacting with the ecosystem.
+
+But gardens need water to thrive. In the next chapter, we'll explore 
+Vue's reactivity system—the irrigation network that keeps your data 
+flowing and your components responsive.
+
+For now, tend your component garden. Create new varieties. Experiment 
+with arrangements. Remember: the best gardens aren't designed—they evolve 
+through patient experimentation and careful observation.
+
+---
+
+/Night falls on your component garden. Each plant rests in its pot,/
+/ready to be transplanted wherever needed. Tomorrow, we'll install/
+/the irrigation system that brings everything to life./

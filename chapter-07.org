@@ -1,0 +1,776 @@
+#+TITLE: Chapter 7: The Greenhouse
+#+SUBTITLE: Build Tools & Deployment - Climate Control for Your Garden
+
+* Chapter 7: The Greenhouse (Build Tools & Deployment)
+
+A greenhouse gives gardeners control. Inside its glass walls, you manage 
+temperature, humidity, and light. You can grow tomatoes in winter, start 
+seeds weeks early, and protect delicate plants from harsh weather.
+
+Build tools are your digital greenhouse. Vite, Webpack, and other bundlers 
+create the perfect environment for your Vue garden to grow—optimizing, 
+transforming, and preparing your plants for the outside world.
+
+Let's step inside and learn climate control.
+
+* Climate Control (Vite/Webpack)
+
+Modern Vue applications need controlled environments. Your development 
+greenhouse (Vite) provides instant feedback and hot module replacement. 
+Your production greenhouse (build process) optimizes everything for the 
+real world.
+
+** Setting Up Your Greenhouse (Vite)
+
+Vite is Vue's preferred greenhouse—fast, modern, and perfectly tuned:
+
+#+BEGIN_SRC bash
+# Create a new Vue greenhouse
+npm create vite@latest my-vue-greenhouse -- --template vue
+
+# Step inside
+cd my-vue-greenhouse
+
+# Install the climate control systems
+npm install
+
+# Start the greenhouse
+npm run dev
+#+END_SRC
+
+** Understanding Your Greenhouse Structure
+
+#+BEGIN_SRC
+my-vue-greenhouse/
+├── src/                    # Your growing area
+│   ├── assets/            # Garden decorations (images, styles)
+│   ├── components/        # Your plant collection
+│   ├── App.vue           # Main garden layout
+│   └── main.js           # Greenhouse entrance
+├── public/                # Public garden area (static files)
+├── index.html            # Greenhouse door
+├── vite.config.js        # Climate control settings
+└── package.json          # Seed catalog and tool list
+#+END_SRC
+
+** Configuring Your Climate (vite.config.js)
+
+#+BEGIN_SRC javascript
+// vite.config.js - Your greenhouse control panel
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import path from 'path';
+
+export default defineConfig({
+  plugins: [vue()],
+  
+  // Temperature control (dev server)
+  server: {
+    port: 3000,
+    open: true,  // Auto-open greenhouse door
+    hmr: {       // Hot module replacement (instant plant updates)
+      overlay: true
+    }
+  },
+  
+  // Humidity control (aliases)
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+      '@components': path.resolve(__dirname, './src/components'),
+      '@composables': path.resolve(__dirname, './src/composables'),
+      '@assets': path.resolve(__dirname, './src/assets')
+    }
+  },
+  
+  // Light settings (CSS)
+  css: {
+    preprocessorOptions: {
+      scss: {
+        additionalData: `@import "@/styles/variables.scss";`
+      }
+    }
+  },
+  
+  // Ventilation (build optimization)
+  build: {
+    target: 'es2015',
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,  // Remove console.logs in production
+        drop_debugger: true
+      }
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor': ['vue', 'vue-router', 'pinia'],
+          'utils': ['lodash', 'axios']
+        }
+      }
+    }
+  }
+});
+#+END_SRC
+
+* Propagation Techniques (Building for Production)
+
+When your plants are strong enough, they need to leave the greenhouse. 
+Building for production prepares them for the real world.
+
+** Preparing Plants for Outside
+
+#+BEGIN_SRC bash
+# Build for production (prepare for transplanting)
+npm run build
+
+# Preview the production build locally
+npm run preview
+#+END_SRC
+
+** What Happens During Build
+
+The build process is like preparing seedlings for transplanting:
+
+1. *Hardening Off*: Code is minified and optimized
+2. *Pruning*: Dead code is removed (tree shaking)
+3. *Fertilizing*: Assets are optimized and compressed
+4. *Labeling*: Files are hashed for caching
+5. *Packaging*: Everything is bundled for transport
+
+#+BEGIN_SRC javascript
+// Before build (greenhouse environment)
+import { computed, ref } from 'vue';
+import MyLargeComponent from './MyLargeComponent.vue';
+
+const count = ref(0);
+const double = computed(() => count.value * 2);
+console.log('Development mode!');
+
+// After build (ready for outside)
+// - Imports are bundled and optimized
+// - Console.logs are removed
+// - Code is minified to something like:
+// const e=r(0),t=c(()=>2*e.value);
+#+END_SRC
+
+** Build Optimization Strategies
+
+#+BEGIN_SRC javascript
+// Lazy loading (gradual transplanting)
+const AdminDashboard = () => import('./components/AdminDashboard.vue');
+
+// Code splitting (separate garden sections)
+const routes = [
+  {
+    path: '/garden',
+    component: () => import('./views/Garden.vue')
+  },
+  {
+    path: '/greenhouse',
+    component: () => import('./views/Greenhouse.vue')
+  }
+];
+
+// Asset optimization
+import gardenImage from '@/assets/garden.jpg?w=800&format=webp';
+
+// Environment-specific code (greenhouse vs outside)
+if (import.meta.env.DEV) {
+  console.log('Development greenhouse');
+}
+
+if (import.meta.env.PROD) {
+  // Production optimizations
+  enableAnalytics();
+}
+#+END_SRC
+
+* Transplanting to the Outdoors (Deployment)
+
+Your Vue garden is thriving in the greenhouse. Now it's time to transplant 
+it to the real world—deployment.
+
+** Choosing Your Garden Location
+
+Different hosting environments suit different gardens:
+
+*** Static Hosting (Simple Gardens)
+
+Perfect for Vue SPAs without server-side needs:
+
+#+BEGIN_SRC bash
+# Netlify
+# 1. Build your garden
+npm run build
+
+# 2. Drag 'dist' folder to Netlify
+# Or use Netlify CLI
+npm install -g netlify-cli
+netlify deploy --prod --dir=dist
+
+# Vercel
+npm install -g vercel
+vercel --prod
+
+# GitHub Pages
+# Add to package.json:
+"scripts": {
+  "deploy": "npm run build && gh-pages -d dist"
+}
+npm run deploy
+#+END_SRC
+
+*** Cloud Gardens (AWS S3 + CloudFront)
+
+For gardens that need global distribution:
+
+#+BEGIN_SRC bash
+# Build the garden
+npm run build
+
+# Upload to S3
+aws s3 sync dist/ s3://my-vue-garden --delete
+
+# Invalidate CloudFront cache
+aws cloudfront create-invalidation \
+  --distribution-id YOUR_DISTRIBUTION_ID \
+  --paths "/*"
+#+END_SRC
+
+*** Container Gardens (Docker)
+
+For gardens that need consistent environments:
+
+#+BEGIN_SRC dockerfile
+# Dockerfile - Portable greenhouse
+FROM node:16-alpine as builder
+
+# Prepare the soil
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+
+# Plant the seeds
+COPY . .
+RUN npm run build
+
+# Transplant to nginx
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/nginx.conf
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+#+END_SRC
+
+** Continuous Garden Care (CI/CD)
+
+Automate your garden maintenance with CI/CD:
+
+#+BEGIN_SRC yaml
+# .github/workflows/deploy.yml - Automated gardener
+name: Deploy Vue Garden
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout garden
+        uses: actions/checkout@v2
+      
+      - name: Setup greenhouse
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+          cache: 'npm'
+      
+      - name: Install seeds
+        run: npm ci
+      
+      - name: Test soil quality
+        run: npm run test
+      
+      - name: Build greenhouse
+        run: npm run build
+      
+      - name: Deploy to garden
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+#+END_SRC
+
+* Season Extension (Performance Optimization)
+
+Just as greenhouses extend the growing season, optimization extends your 
+application's performance.
+
+** Measuring Garden Performance
+
+#+BEGIN_SRC javascript
+// vite.config.js - Add performance monitoring
+import { visualizer } from 'rollup-plugin-visualizer';
+
+export default defineConfig({
+  plugins: [
+    vue(),
+    visualizer({
+      open: true,
+      gzipSize: true,
+      brotliSize: true
+    })
+  ]
+});
+#+END_SRC
+
+** Lazy Loading Garden Sections
+
+#+BEGIN_SRC vue
+<template>
+  <div>
+    <!-- Load heavy components only when needed -->
+    <button @click="showGreenhouse = true">Enter Greenhouse</button>
+    
+    <Suspense v-if="showGreenhouse">
+      <template #default>
+        <LazyGreenhouse />
+      </template>
+      <template #fallback>
+        <div>Loading greenhouse...</div>
+      </template>
+    </Suspense>
+  </div>
+</template>
+
+<script setup>
+import { ref, defineAsyncComponent } from 'vue';
+
+// Lazy load heavy components
+const LazyGreenhouse = defineAsyncComponent(() => 
+  import('./components/Greenhouse.vue')
+);
+
+const showGreenhouse = ref(false);
+</script>
+#+END_SRC
+
+** Image Optimization
+
+#+BEGIN_SRC javascript
+// Optimize images during build
+import gardenJpg from './assets/garden.jpg?w=800&format=webp';
+import thumbnailAvif from './assets/thumb.jpg?w=200&format=avif';
+
+// Responsive images
+const imageSet = {
+  small: import('./assets/garden.jpg?w=400'),
+  medium: import('./assets/garden.jpg?w=800'),
+  large: import('./assets/garden.jpg?w=1200')
+};
+#+END_SRC
+
+* Complete Greenhouse Management System
+
+Let's build a complete build and deployment pipeline:
+
+#+BEGIN_SRC javascript
+// build-config.js - Advanced greenhouse configuration
+import { defineConfig, loadEnv } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import { VitePWA } from 'vite-plugin-pwa';
+import Components from 'unplugin-vue-components/vite';
+import AutoImport from 'unplugin-auto-import/vite';
+import { compression } from 'vite-plugin-compression2';
+import { visualizer } from 'rollup-plugin-visualizer';
+
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd());
+  
+  return {
+    plugins: [
+      vue(),
+      
+      // Auto-import components (automatic seed planting)
+      Components({
+        dirs: ['src/components'],
+        dts: 'src/components.d.ts'
+      }),
+      
+      // Auto-import Vue APIs
+      AutoImport({
+        imports: ['vue', 'vue-router', 'pinia'],
+        dts: 'src/auto-imports.d.ts'
+      }),
+      
+      // PWA support (offline greenhouse)
+      VitePWA({
+        registerType: 'autoUpdate',
+        manifest: {
+          name: 'Vue Garden',
+          short_name: 'Garden',
+          theme_color: '#4CAF50',
+          icons: [
+            {
+              src: '/garden-192.png',
+              sizes: '192x192',
+              type: 'image/png'
+            }
+          ]
+        },
+        workbox: {
+          globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+          runtimeCaching: [
+            {
+              urlPattern: /^https:\/\/api\.garden\.com/,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'api-cache',
+                expiration: {
+                  maxEntries: 10,
+                  maxAgeSeconds: 300
+                }
+              }
+            }
+          ]
+        }
+      }),
+      
+      // Compression (compact for transport)
+      compression({
+        algorithm: 'gzip',
+        ext: '.gz'
+      }),
+      
+      compression({
+        algorithm: 'brotliCompress',
+        ext: '.br'
+      }),
+      
+      // Bundle analyzer
+      visualizer({
+        open: process.env.ANALYZE === 'true',
+        filename: 'dist/stats.html',
+        gzipSize: true,
+        brotliSize: true
+      })
+    ],
+    
+    // Optimize dependencies
+    optimizeDeps: {
+      include: ['vue', 'vue-router', 'pinia'],
+      exclude: ['@vueuse/core']
+    },
+    
+    // Build settings
+    build: {
+      target: 'es2015',
+      cssCodeSplit: true,
+      sourcemap: mode === 'development',
+      
+      rollupOptions: {
+        output: {
+          // Separate vendor chunks
+          manualChunks: (id) => {
+            if (id.includes('node_modules')) {
+              if (id.includes('vue') || id.includes('pinia')) {
+                return 'vue-vendor';
+              }
+              if (id.includes('lodash') || id.includes('axios')) {
+                return 'utils';
+              }
+              return 'vendor';
+            }
+          },
+          
+          // Asset naming
+          assetFileNames: (assetInfo) => {
+            const info = assetInfo.name.split('.');
+            const ext = info[info.length - 1];
+            
+            if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(ext)) {
+              return `assets/images/[name]-[hash][extname]`;
+            } else if (/woff|woff2|eot|ttf|otf/i.test(ext)) {
+              return `assets/fonts/[name]-[hash][extname]`;
+            }
+            return `assets/[name]-[hash][extname]`;
+          },
+          
+          chunkFileNames: 'js/[name]-[hash].js',
+          entryFileNames: 'js/[name]-[hash].js'
+        }
+      },
+      
+      // Terser options for minification
+      terserOptions: {
+        compress: {
+          drop_console: mode === 'production',
+          drop_debugger: true,
+          pure_funcs: mode === 'production' ? ['console.log'] : []
+        },
+        format: {
+          comments: false
+        }
+      }
+    },
+    
+    // Environment-specific settings
+    define: {
+      __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
+      __BUILD_TIME__: JSON.stringify(new Date().toISOString())
+    }
+  };
+});
+#+END_SRC
+
+** Deployment Script
+
+#+BEGIN_SRC javascript
+// scripts/deploy.js - Automated transplanting
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import chalk from 'chalk';
+
+const deploy = async () => {
+  console.log(chalk.green('🌱 Starting deployment process...'));
+  
+  try {
+    // Step 1: Run tests
+    console.log(chalk.blue('🧪 Running tests...'));
+    execSync('npm run test', { stdio: 'inherit' });
+    
+    // Step 2: Build
+    console.log(chalk.blue('🏗️ Building for production...'));
+    execSync('npm run build', { stdio: 'inherit' });
+    
+    // Step 3: Check build size
+    const distPath = path.resolve('dist');
+    const stats = fs.statSync(distPath);
+    console.log(chalk.yellow(`📦 Build size: ${(stats.size / 1024 / 1024).toFixed(2)}MB`));
+    
+    // Step 4: Deploy based on environment
+    const deployTarget = process.env.DEPLOY_TARGET || 'netlify';
+    
+    switch (deployTarget) {
+      case 'netlify':
+        console.log(chalk.blue('🚀 Deploying to Netlify...'));
+        execSync('netlify deploy --prod --dir=dist', { stdio: 'inherit' });
+        break;
+        
+      case 'vercel':
+        console.log(chalk.blue('🚀 Deploying to Vercel...'));
+        execSync('vercel --prod', { stdio: 'inherit' });
+        break;
+        
+      case 's3':
+        console.log(chalk.blue('🚀 Deploying to AWS S3...'));
+        execSync(`aws s3 sync dist/ s3://${process.env.S3_BUCKET} --delete`, { stdio: 'inherit' });
+        
+        // Invalidate CloudFront
+        if (process.env.CLOUDFRONT_ID) {
+          console.log(chalk.blue('🔄 Invalidating CloudFront cache...'));
+          execSync(`aws cloudfront create-invalidation --distribution-id ${process.env.CLOUDFRONT_ID} --paths "/*"`, { stdio: 'inherit' });
+        }
+        break;
+        
+      default:
+        throw new Error(`Unknown deploy target: ${deployTarget}`);
+    }
+    
+    console.log(chalk.green('✅ Deployment successful!'));
+    
+    // Step 5: Notify
+    if (process.env.SLACK_WEBHOOK) {
+      await notifySlack('Deployment successful! 🎉');
+    }
+    
+  } catch (error) {
+    console.error(chalk.red('❌ Deployment failed:'), error.message);
+    
+    if (process.env.SLACK_WEBHOOK) {
+      await notifySlack(`Deployment failed: ${error.message} 😞`);
+    }
+    
+    process.exit(1);
+  }
+};
+
+const notifySlack = async (message) => {
+  // Slack notification implementation
+  console.log(chalk.gray(`📢 Slack notification: ${message}`));
+};
+
+deploy();
+#+END_SRC
+
+** Environment Configuration
+
+#+BEGIN_SRC bash
+# .env.development - Greenhouse settings
+VITE_API_URL=http://localhost:3001
+VITE_APP_TITLE=Vue Garden (Dev)
+VITE_ENABLE_DEBUG=true
+
+# .env.production - Outdoor settings
+VITE_API_URL=https://api.vuegarden.com
+VITE_APP_TITLE=Vue Garden
+VITE_ENABLE_DEBUG=false
+
+# .env.staging - Testing ground
+VITE_API_URL=https://staging-api.vuegarden.com
+VITE_APP_TITLE=Vue Garden (Staging)
+VITE_ENABLE_DEBUG=true
+#+END_SRC
+
+* Monitoring Your Deployed Garden
+
+Once transplanted, monitor your garden's health:
+
+#+BEGIN_SRC javascript
+// src/utils/monitoring.js
+class GardenMonitor {
+  constructor() {
+    this.metrics = {
+      loadTime: 0,
+      errors: [],
+      performance: {}
+    };
+    
+    this.initializeMonitoring();
+  }
+  
+  initializeMonitoring() {
+    // Performance monitoring
+    window.addEventListener('load', () => {
+      const perfData = performance.getEntriesByType('navigation')[0];
+      this.metrics.loadTime = perfData.loadEventEnd - perfData.fetchStart;
+      
+      console.log(`Garden loaded in ${this.metrics.loadTime}ms`);
+      
+      // Send to analytics
+      this.reportMetrics({
+        event: 'page_load',
+        value: this.metrics.loadTime
+      });
+    });
+    
+    // Error monitoring
+    window.addEventListener('error', (event) => {
+      this.metrics.errors.push({
+        message: event.message,
+        source: event.filename,
+        line: event.lineno,
+        timestamp: new Date()
+      });
+      
+      this.reportError(event);
+    });
+    
+    // Vue error handling
+    if (window.app) {
+      window.app.config.errorHandler = (err, vm, info) => {
+        console.error('Vue error:', err);
+        this.reportError({
+          message: err.message,
+          component: vm?.$options.name,
+          info
+        });
+      };
+    }
+  }
+  
+  reportMetrics(data) {
+    // Send to your analytics service
+    if (window.gtag) {
+      window.gtag('event', data.event, {
+        value: data.value
+      });
+    }
+  }
+  
+  reportError(error) {
+    // Send to error tracking service
+    if (window.Sentry) {
+      window.Sentry.captureException(error);
+    }
+  }
+  
+  checkGardenHealth() {
+    const health = {
+      loadTime: this.metrics.loadTime < 3000 ? 'good' : 'poor',
+      errorCount: this.metrics.errors.length,
+      memoryUsage: performance.memory ? 
+        (performance.memory.usedJSHeapSize / performance.memory.jsHeapSizeLimit * 100).toFixed(2) + '%' : 
+        'N/A'
+    };
+    
+    return health;
+  }
+}
+
+export default new GardenMonitor();
+#+END_SRC
+
+* Exercises: Greenhouse Management
+
+** Exercise 1: Build Pipeline
+Create a complete build pipeline that:
+- Runs linting and tests
+- Optimizes images
+- Generates a sitemap
+- Creates different builds for different environments
+
+** Exercise 2: Performance Budget
+Implement a performance budget system:
+- Set size limits for bundles
+- Alert when limits are exceeded
+- Generate performance reports
+- Track metrics over time
+
+** Exercise 3: Multi-Stage Deployment
+Build a deployment system with:
+- Development, staging, and production environments
+- Automated testing between stages
+- Rollback capabilities
+- Blue-green deployments
+
+** Exercise 4: Offline Greenhouse
+Create a PWA version that:
+- Works offline
+- Syncs data when online
+- Provides offline feedback
+- Caches critical resources
+
+* Closing Thoughts
+
+Your greenhouse is operational. You control the climate, optimize growth 
+conditions, and prepare your plants for any environment. Your Vue garden 
+can now thrive anywhere—from local development to global production.
+
+You've learned:
+- Setting up build tools (Vite)
+- Optimizing for production
+- Deployment strategies
+- Performance optimization
+- Monitoring deployed applications
+
+Your garden no longer depends on perfect weather. With your greenhouse, 
+you create the perfect conditions, ensuring healthy growth regardless of 
+the outside environment.
+
+But a garden is meant to be shared. In our final chapter, we'll host a 
+garden party—exploring testing, best practices, and how to share your 
+garden with the world.
+
+---
+
+/The greenhouse hums with controlled energy. Through its glass walls,/
+/your garden grows stronger than ever, ready for any climate, any season./
+/Tomorrow, we celebrate with a garden party./

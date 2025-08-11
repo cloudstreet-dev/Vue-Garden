@@ -1,0 +1,1455 @@
+#+TITLE: Chapter 3: The Watering System
+#+SUBTITLE: Vue's Reactivity - How Data Flows Through Your Garden
+
+* Chapter 3: The Watering System (Reactivity)
+
+Stand in any garden during watering time, and you'll witness something 
+magical. Turn the valve, and water flows through hidden pipes, emerging 
+at precisely the right spots. One action—turning a valve—triggers a 
+cascade of effects throughout the garden.
+
+This is reactivity: change happens here, effects ripple there. In Vue, 
+reactivity is the irrigation system that keeps your application alive 
+and responsive. Change data at the source, and updates flow automatically 
+to every component that needs them.
+
+Let's explore the hidden pipes and channels that make your Vue garden 
+flourish.
+
+* How Water Flows (Vue's Reactivity System)
+
+In a well-designed garden, you don't carry water to each plant by hand. 
+You build a system: pumps, pipes, and sprinklers that distribute water 
+automatically. Vue's reactivity system works the same way.
+
+** The Water Source (Reactive Data)
+
+Every irrigation system starts with a water source. In Vue, that source 
+is your reactive data:
+
+#+BEGIN_SRC javascript
+const { createApp, reactive } = Vue;
+
+const garden = reactive({
+    moisture: 50,
+    temperature: 72,
+    sunlight: 'full',
+    plants: [
+        { name: 'Tomato', waterNeeds: 'high' },
+        { name: 'Cactus', waterNeeds: 'low' }
+    ]
+});
+
+// When you change the source...
+garden.moisture = 75;  // Water flows everywhere it's needed
+#+END_SRC
+
+The moment you change =garden.moisture=, Vue knows. It tracks every place 
+that uses this value and updates them all. You turned the valve; Vue 
+handles the distribution.
+
+** Understanding the Plumbing
+
+Let's peek underground to see how Vue's reactivity actually works:
+
+#+BEGIN_SRC html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Reactivity Plumbing</title>
+    <style>
+        #app {
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .water-system {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .pipe {
+            height: 4px;
+            background: #00bcd4;
+            margin: 10px 0;
+            position: relative;
+            border-radius: 2px;
+        }
+        
+        .water-flow {
+            position: absolute;
+            height: 100%;
+            background: #00e5ff;
+            border-radius: 2px;
+            animation: flow 2s infinite;
+        }
+        
+        @keyframes flow {
+            0% { width: 0%; left: 0; }
+            50% { width: 30%; left: 35%; }
+            100% { width: 0%; left: 100%; }
+        }
+        
+        .valve {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #ff5722;
+            border: none;
+            border-radius: 50px;
+            color: white;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        
+        .gauge {
+            display: inline-block;
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 5px;
+            margin: 5px;
+        }
+        
+        .plant-status {
+            display: inline-block;
+            padding: 15px;
+            margin: 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>🚿 The Reactivity Irrigation System</h1>
+        
+        <div class="water-system">
+            <h2>Water Control Panel</h2>
+            
+            <!-- The Source Controls -->
+            <div>
+                <button class="valve" @click="adjustWater(10)">
+                    💧 Add Water (+10)
+                </button>
+                <button class="valve" @click="adjustWater(-10)">
+                    🏜️ Reduce Water (-10)
+                </button>
+                <button class="valve" @click="toggleRain">
+                    {{ isRaining ? '☀️ Stop Rain' : '🌧️ Start Rain' }}
+                </button>
+            </div>
+            
+            <!-- The Gauges (Reactive Display) -->
+            <div style="margin: 20px 0">
+                <span class="gauge">💧 Water Level: {{ waterLevel }}%</span>
+                <span class="gauge">🌡️ Soil Moisture: {{ soilMoisture }}%</span>
+                <span class="gauge">📊 Flow Rate: {{ flowRate }} L/min</span>
+            </div>
+            
+            <!-- Visual Pipes -->
+            <div class="pipe">
+                <div class="water-flow" :style="{ animationDuration: flowSpeed + 's' }"></div>
+            </div>
+        </div>
+        
+        <!-- The Garden (Reactive Effects) -->
+        <div class="water-system">
+            <h2>Garden Response</h2>
+            
+            <div class="plant-status" v-for="plant in plants" :key="plant.name">
+                <div style="font-size: 48px">{{ plant.emoji }}</div>
+                <div>{{ plant.name }}</div>
+                <div>Status: {{ plant.status }}</div>
+                <div>Health: {{ plant.health }}%</div>
+            </div>
+            
+            <div v-if="gardenAlert" style="margin-top: 20px; padding: 10px; background: rgba(255,0,0,0.3); border-radius: 5px;">
+                ⚠️ Alert: {{ gardenAlert }}
+            </div>
+        </div>
+        
+        <!-- The Underground View -->
+        <div class="water-system">
+            <h2>🔍 Underground View (How Reactivity Works)</h2>
+            <pre style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px;">
+Water Level ({{ waterLevel }}) changes
+    ↓
+Triggers recomputation of:
+    → Soil Moisture: {{ soilMoisture }}%
+    → Flow Rate: {{ flowRate }} L/min
+    → Plant Health: {{ averagePlantHealth }}%
+    → Garden Alerts: {{ gardenAlert || 'None' }}
+    
+All automatically, no manual updates needed!
+            </pre>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    waterLevel: 50,
+                    isRaining: false,
+                    lastWaterLevel: 50,
+                    plants: [
+                        { name: 'Tomato', emoji: '🍅', waterNeeds: 70, health: 50, status: 'Growing' },
+                        { name: 'Cactus', emoji: '🌵', waterNeeds: 20, health: 100, status: 'Thriving' },
+                        { name: 'Fern', emoji: '🌿', waterNeeds: 80, health: 30, status: 'Thirsty' }
+                    ]
+                }
+            },
+            
+            // Computed properties: Automatic irrigation channels
+            computed: {
+                soilMoisture() {
+                    // Soil moisture follows water level with a lag
+                    return Math.min(100, this.waterLevel * 0.8 + (this.isRaining ? 20 : 0));
+                },
+                
+                flowRate() {
+                    // Flow rate depends on water pressure
+                    const pressure = Math.abs(this.waterLevel - this.lastWaterLevel);
+                    return Math.min(10, pressure * 0.5);
+                },
+                
+                flowSpeed() {
+                    // Animation speed based on flow rate
+                    return Math.max(0.5, 5 - this.flowRate * 0.4);
+                },
+                
+                gardenAlert() {
+                    if (this.waterLevel < 20) return 'Low water! Plants are thirsty!';
+                    if (this.waterLevel > 90) return 'Flooding risk! Too much water!';
+                    if (this.soilMoisture < 30) return 'Soil is too dry!';
+                    return null;
+                },
+                
+                averagePlantHealth() {
+                    const total = this.plants.reduce((sum, plant) => sum + plant.health, 0);
+                    return Math.round(total / this.plants.length);
+                }
+            },
+            
+            // Watchers: Monitoring the flow
+            watch: {
+                waterLevel(newLevel, oldLevel) {
+                    console.log(`💧 Water level changed: ${oldLevel}% → ${newLevel}%`);
+                    this.lastWaterLevel = oldLevel;
+                    this.updatePlantHealth();
+                },
+                
+                soilMoisture(newMoisture) {
+                    console.log(`🌱 Soil moisture updated to ${newMoisture}%`);
+                },
+                
+                isRaining(raining) {
+                    if (raining) {
+                        console.log('🌧️ Rain started! Water level increasing...');
+                        this.startRain();
+                    } else {
+                        console.log('☀️ Rain stopped');
+                    }
+                }
+            },
+            
+            methods: {
+                adjustWater(amount) {
+                    this.waterLevel = Math.max(0, Math.min(100, this.waterLevel + amount));
+                },
+                
+                toggleRain() {
+                    this.isRaining = !this.isRaining;
+                },
+                
+                startRain() {
+                    if (this.isRaining) {
+                        const rainInterval = setInterval(() => {
+                            if (!this.isRaining) {
+                                clearInterval(rainInterval);
+                                return;
+                            }
+                            this.waterLevel = Math.min(100, this.waterLevel + 2);
+                        }, 500);
+                    }
+                },
+                
+                updatePlantHealth() {
+                    this.plants.forEach(plant => {
+                        const idealMoisture = plant.waterNeeds;
+                        const difference = Math.abs(this.soilMoisture - idealMoisture);
+                        
+                        // Health based on how close moisture is to ideal
+                        plant.health = Math.max(0, Math.min(100, 100 - difference));
+                        
+                        // Update status based on health
+                        if (plant.health > 80) {
+                            plant.status = 'Thriving';
+                        } else if (plant.health > 50) {
+                            plant.status = 'Growing';
+                        } else if (plant.health > 20) {
+                            plant.status = 'Struggling';
+                        } else {
+                            plant.status = 'Wilting';
+                        }
+                        
+                        // Update emoji based on status
+                        if (plant.name === 'Tomato') {
+                            plant.emoji = plant.health > 50 ? '🍅' : '🥀';
+                        } else if (plant.name === 'Fern') {
+                            plant.emoji = plant.health > 50 ? '🌿' : '🍂';
+                        }
+                    });
+                }
+            },
+            
+            mounted() {
+                console.log('🚿 Irrigation system initialized');
+                console.log('Try adjusting water levels and watch the chain reaction!');
+                this.updatePlantHealth();
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
+#+END_SRC
+
+** The Magic of Dependency Tracking
+
+Vue's reactivity is like having smart sensors throughout your garden. When 
+you access =waterLevel= inside a computed property, Vue notes: "This 
+calculation depends on water level." Later, when =waterLevel= changes, Vue 
+knows exactly what needs updating.
+
+It's as if each pipe has a sensor that says, "I'm connected to the main 
+water line." When pressure changes at the source, every connected pipe 
+responds instantly.
+
+* Irrigation Channels (Computed Properties)
+
+Computed properties are like irrigation channels with built-in flow 
+calculators. They automatically recalculate when their water source changes.
+
+** Simple Channels
+
+Basic computed properties are straightforward channels:
+
+#+BEGIN_SRC javascript
+const app = {
+    data() {
+        return {
+            rainfall: 10,      // mm per day
+            sprinklerOutput: 5 // mm per day
+        }
+    },
+    
+    computed: {
+        // This channel calculates total water
+        totalWaterSupply() {
+            return this.rainfall + this.sprinklerOutput;
+        },
+        
+        // This channel determines garden status
+        gardenHydration() {
+            const total = this.totalWaterSupply;
+            if (total < 5) return 'Parched';
+            if (total < 10) return 'Dry';
+            if (total < 20) return 'Moist';
+            return 'Well-watered';
+        }
+    }
+}
+#+END_SRC
+
+** Smart Flow Control
+
+Computed properties are smart—they cache their results and only 
+recalculate when necessary:
+
+#+BEGIN_SRC javascript
+computed: {
+    // This expensive calculation only runs when inputs change
+    optimalWateringSchedule() {
+        console.log('Calculating watering schedule...');
+        
+        // Imagine complex calculations here
+        const schedule = [];
+        for (let hour = 0; hour < 24; hour++) {
+            const needsWater = this.calculateNeedAtHour(hour);
+            if (needsWater) {
+                schedule.push(hour);
+            }
+        }
+        
+        return schedule;
+    },
+    
+    // Multiple components can use this without recalculation
+    nextWateringTime() {
+        const schedule = this.optimalWateringSchedule;
+        const currentHour = new Date().getHours();
+        return schedule.find(hour => hour > currentHour) || schedule[0];
+    }
+}
+#+END_SRC
+
+** Computed vs Methods: Channels vs Buckets
+
+Why use computed properties instead of methods? It's like the difference 
+between an irrigation channel and carrying water in buckets:
+
+#+BEGIN_SRC javascript
+// Method: Carries water each time (recalculates every call)
+methods: {
+    calculateMoisture() {
+        console.log('Calculating moisture...'); // Logs every time
+        return this.water * this.absorption / this.evaporation;
+    }
+}
+
+// Computed: Channel that maintains flow (caches result)
+computed: {
+    moistureLevel() {
+        console.log('Calculating moisture...'); // Only logs when dependencies change
+        return this.water * this.absorption / this.evaporation;
+    }
+}
+
+// In template:
+// {{ calculateMoisture() }}  - Runs every render
+// {{ moistureLevel }}        - Uses cached value
+#+END_SRC
+
+* Weather Watching (Watchers)
+
+Sometimes you need to respond to changes, not just calculate values. 
+Watchers are like weather stations—they observe conditions and trigger 
+actions.
+
+** Basic Weather Monitoring
+
+Simple watchers observe single values:
+
+#+BEGIN_SRC javascript
+data() {
+    return {
+        temperature: 72,
+        humidity: 50,
+        sunlightHours: 8
+    }
+},
+
+watch: {
+    // Watch temperature changes
+    temperature(newTemp, oldTemp) {
+        console.log(`Temperature changed: ${oldTemp}°F → ${newTemp}°F`);
+        
+        if (newTemp > 90) {
+            this.activateSprinklers();
+        } else if (newTemp < 32) {
+            this.coverDelicatePlants();
+        }
+    },
+    
+    // Watch humidity with immediate execution
+    humidity: {
+        handler(newHumidity) {
+            this.adjustWateringFrequency(newHumidity);
+        },
+        immediate: true  // Run on component creation too
+    }
+}
+#+END_SRC
+
+** Deep Garden Monitoring
+
+For complex data like your entire garden state, use deep watching:
+
+#+BEGIN_SRC javascript
+data() {
+    return {
+        garden: {
+            beds: [
+                { id: 1, moisture: 50, plants: ['tomato', 'basil'] },
+                { id: 2, moisture: 60, plants: ['lettuce', 'spinach'] }
+            ],
+            weather: {
+                temperature: 72,
+                humidity: 50,
+                forecast: 'sunny'
+            }
+        }
+    }
+},
+
+watch: {
+    // Deep watch the entire garden
+    garden: {
+        handler(newGarden, oldGarden) {
+            console.log('Garden state changed!');
+            this.saveGardenState(newGarden);
+        },
+        deep: true  // Watch all nested properties
+    },
+    
+    // Watch specific path
+    'garden.weather.temperature'(newTemp) {
+        this.adjustSprinklers(newTemp);
+    }
+}
+#+END_SRC
+
+** Advanced Weather Station
+
+Here's a complete example of watchers in action:
+
+#+BEGIN_SRC html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Garden Weather Station</title>
+    <style>
+        #app {
+            padding: 20px;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(to bottom, #1e3c72, #2a5298);
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .weather-station {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+        }
+        
+        .metric {
+            display: inline-block;
+            margin: 10px;
+            padding: 15px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            min-width: 150px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 36px;
+            font-weight: bold;
+        }
+        
+        .alert {
+            background: rgba(255,100,100,0.3);
+            border: 2px solid rgba(255,100,100,0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        
+        .recommendation {
+            background: rgba(100,255,100,0.2);
+            border: 2px solid rgba(100,255,100,0.4);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        
+        .slider {
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        .log {
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 5px;
+            height: 150px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>🌤️ Garden Weather Station</h1>
+        
+        <div class="weather-station">
+            <h2>Current Conditions</h2>
+            
+            <div>
+                <div class="metric">
+                    <div>🌡️ Temperature</div>
+                    <div class="metric-value">{{ temperature }}°F</div>
+                    <input type="range" v-model.number="temperature" 
+                           min="0" max="120" class="slider">
+                </div>
+                
+                <div class="metric">
+                    <div>💧 Humidity</div>
+                    <div class="metric-value">{{ humidity }}%</div>
+                    <input type="range" v-model.number="humidity" 
+                           min="0" max="100" class="slider">
+                </div>
+                
+                <div class="metric">
+                    <div>☀️ Light</div>
+                    <div class="metric-value">{{ sunlight }}h</div>
+                    <input type="range" v-model.number="sunlight" 
+                           min="0" max="16" step="0.5" class="slider">
+                </div>
+                
+                <div class="metric">
+                    <div>💨 Wind</div>
+                    <div class="metric-value">{{ windSpeed }}mph</div>
+                    <input type="range" v-model.number="windSpeed" 
+                           min="0" max="50" class="slider">
+                </div>
+            </div>
+        </div>
+        
+        <div class="weather-station">
+            <h2>Garden Response System</h2>
+            
+            <!-- Alerts -->
+            <div v-for="alert in activeAlerts" :key="alert" class="alert">
+                ⚠️ {{ alert }}
+            </div>
+            
+            <!-- Recommendations -->
+            <div v-for="rec in recommendations" :key="rec" class="recommendation">
+                💡 {{ rec }}
+            </div>
+            
+            <!-- Garden Status -->
+            <div style="margin-top: 20px">
+                <h3>Automated Actions:</h3>
+                <p>🚿 Sprinklers: {{ sprinklersActive ? 'ON' : 'OFF' }}</p>
+                <p>🎪 Shade Cloth: {{ shadeDeployed ? 'DEPLOYED' : 'RETRACTED' }}</p>
+                <p>🌡️ Greenhouse Vents: {{ ventsOpen ? 'OPEN' : 'CLOSED' }}</p>
+                <p>💨 Wind Breaks: {{ windBreaksUp ? 'RAISED' : 'LOWERED' }}</p>
+            </div>
+        </div>
+        
+        <div class="weather-station">
+            <h2>Activity Log</h2>
+            <div class="log">
+                <div v-for="(log, index) in activityLog" :key="index">
+                    {{ log }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    // Weather metrics
+                    temperature: 72,
+                    humidity: 50,
+                    sunlight: 8,
+                    windSpeed: 5,
+                    
+                    // Garden systems
+                    sprinklersActive: false,
+                    shadeDeployed: false,
+                    ventsOpen: false,
+                    windBreaksUp: false,
+                    
+                    // Logging
+                    activityLog: ['System initialized'],
+                    
+                    // Thresholds
+                    criticalTemp: 95,
+                    frostWarning: 35,
+                    highWind: 25
+                }
+            },
+            
+            computed: {
+                activeAlerts() {
+                    const alerts = [];
+                    
+                    if (this.temperature > this.criticalTemp) {
+                        alerts.push('HEAT WARNING: Plants may suffer heat stress!');
+                    }
+                    if (this.temperature < this.frostWarning) {
+                        alerts.push('FROST WARNING: Protect sensitive plants!');
+                    }
+                    if (this.humidity < 20) {
+                        alerts.push('LOW HUMIDITY: Increased water needs!');
+                    }
+                    if (this.windSpeed > this.highWind) {
+                        alerts.push('HIGH WIND: Stake tall plants!');
+                    }
+                    
+                    return alerts;
+                },
+                
+                recommendations() {
+                    const recs = [];
+                    
+                    // Temperature-based
+                    if (this.temperature > 85 && this.temperature <= this.criticalTemp) {
+                        recs.push('Consider extra watering today');
+                    }
+                    
+                    // Humidity-based
+                    if (this.humidity > 80) {
+                        recs.push('Watch for fungal diseases in high humidity');
+                    }
+                    
+                    // Light-based
+                    if (this.sunlight < 6) {
+                        recs.push('Low light - consider grow lights for seedlings');
+                    } else if (this.sunlight > 12) {
+                        recs.push('Extended daylight - great for fruiting plants!');
+                    }
+                    
+                    // Combined conditions
+                    if (this.temperature > 80 && this.humidity < 30) {
+                        recs.push('Hot and dry - mulch to retain moisture');
+                    }
+                    
+                    return recs;
+                }
+            },
+            
+            watch: {
+                // Temperature watcher with actions
+                temperature(newTemp, oldTemp) {
+                    const timestamp = new Date().toLocaleTimeString();
+                    this.log(`[${timestamp}] Temperature: ${oldTemp}°F → ${newTemp}°F`);
+                    
+                    // Sprinkler control
+                    if (newTemp > 90 && !this.sprinklersActive) {
+                        this.sprinklersActive = true;
+                        this.log('🚿 Sprinklers activated due to high temperature');
+                    } else if (newTemp < 80 && this.sprinklersActive) {
+                        this.sprinklersActive = false;
+                        this.log('🚿 Sprinklers deactivated');
+                    }
+                    
+                    // Shade control
+                    if (newTemp > 95 && !this.shadeDeployed) {
+                        this.shadeDeployed = true;
+                        this.log('🎪 Shade cloth deployed');
+                    } else if (newTemp < 85 && this.shadeDeployed) {
+                        this.shadeDeployed = false;
+                        this.log('🎪 Shade cloth retracted');
+                    }
+                    
+                    // Vent control
+                    if (newTemp > 75 && !this.ventsOpen) {
+                        this.ventsOpen = true;
+                        this.log('🌡️ Greenhouse vents opened');
+                    } else if (newTemp < 65 && this.ventsOpen) {
+                        this.ventsOpen = false;
+                        this.log('🌡️ Greenhouse vents closed');
+                    }
+                },
+                
+                // Humidity watcher
+                humidity(newHumidity) {
+                    const timestamp = new Date().toLocaleTimeString();
+                    this.log(`[${timestamp}] Humidity: ${newHumidity}%`);
+                    
+                    if (newHumidity < 30 && this.temperature > 80) {
+                        this.log('⚠️ Low humidity + high temp = increased watering needed');
+                    }
+                },
+                
+                // Wind watcher
+                windSpeed(newSpeed) {
+                    const timestamp = new Date().toLocaleTimeString();
+                    this.log(`[${timestamp}] Wind speed: ${newSpeed} mph`);
+                    
+                    if (newSpeed > 20 && !this.windBreaksUp) {
+                        this.windBreaksUp = true;
+                        this.log('💨 Wind breaks raised');
+                    } else if (newSpeed < 10 && this.windBreaksUp) {
+                        this.windBreaksUp = false;
+                        this.log('💨 Wind breaks lowered');
+                    }
+                },
+                
+                // Watch multiple values together
+                activeAlerts(newAlerts) {
+                    if (newAlerts.length > 0) {
+                        this.log(`🚨 ${newAlerts.length} active alert(s)`);
+                    }
+                }
+            },
+            
+            methods: {
+                log(message) {
+                    this.activityLog.unshift(message);
+                    // Keep log size manageable
+                    if (this.activityLog.length > 50) {
+                        this.activityLog.pop();
+                    }
+                }
+            },
+            
+            mounted() {
+                this.log('🌤️ Weather station online');
+                this.log('Adjust the sliders to see the reactive system respond');
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
+#+END_SRC
+
+* Moisture Control (v-model)
+
+The =v-model= directive is like a moisture sensor connected directly to 
+your irrigation controller. When moisture changes in the soil, the sensor 
+updates. When you adjust the controller, moisture in the soil changes. 
+It's two-way flow.
+
+** Basic Moisture Sensors
+
+Simple v-model creates a two-way connection:
+
+#+BEGIN_SRC html
+<!-- The input and data are connected like sensor and controller -->
+<input v-model="soilMoisture" type="number">
+
+<!-- This is actually shorthand for: -->
+<input 
+    :value="soilMoisture"
+    @input="soilMoisture = $event.target.value"
+>
+#+END_SRC
+
+** Different Types of Sensors
+
+Vue provides v-model for various input types, like having different 
+sensors in your garden:
+
+#+BEGIN_SRC html
+<!-- Text sensor (like a pH meter) -->
+<input v-model="soilType" type="text">
+
+<!-- Numeric sensor (like a thermometer) -->
+<input v-model.number="temperature" type="number">
+
+<!-- Toggle sensor (like a rain detector) -->
+<input v-model="isRaining" type="checkbox">
+
+<!-- Multiple choice (like weather conditions) -->
+<select v-model="weather">
+    <option>Sunny</option>
+    <option>Cloudy</option>
+    <option>Rainy</option>
+</select>
+
+<!-- Multiple selections (like active pests) -->
+<select v-model="activePests" multiple>
+    <option>Aphids</option>
+    <option>Slugs</option>
+    <option>Caterpillars</option>
+</select>
+
+<!-- Radio sensors (like growth stage) -->
+<input v-model="growthStage" type="radio" value="seedling">
+<input v-model="growthStage" type="radio" value="vegetative">
+<input v-model="growthStage" type="radio" value="flowering">
+#+END_SRC
+
+** Custom Component Sensors
+
+You can create custom v-model connections for your components:
+
+#+BEGIN_SRC javascript
+// A custom garden slider component
+const GardenSlider = {
+    props: ['modelValue', 'min', 'max', 'label'],
+    
+    emits: ['update:modelValue'],
+    
+    template: `
+        <div class="garden-slider">
+            <label>{{ label }}: {{ modelValue }}</label>
+            <input 
+                type="range"
+                :value="modelValue"
+                :min="min"
+                :max="max"
+                @input="$emit('update:modelValue', $event.target.value)"
+            >
+        </div>
+    `
+}
+
+// Use it with v-model
+// <garden-slider v-model="waterPressure" :min="0" :max="100" label="Water Pressure" />
+#+END_SRC
+
+** Advanced Moisture Control
+
+Here's a complete irrigation control panel using v-model:
+
+#+BEGIN_SRC html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Irrigation Control Panel</title>
+    <style>
+        #app {
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #e8f5e9;
+            min-height: 100vh;
+        }
+        
+        .control-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        
+        .control-group {
+            margin: 15px 0;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 5px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #2e7d32;
+        }
+        
+        input, select, textarea {
+            padding: 8px;
+            border: 2px solid #4caf50;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+        }
+        
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        .time-slot {
+            padding: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+        }
+        
+        .time-slot.active {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .preview {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        
+        .zone {
+            display: inline-block;
+            margin: 5px;
+            padding: 10px;
+            background: #fff3e0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>🚿 Irrigation Control Panel</h1>
+        
+        <div class="control-panel">
+            <h2>System Configuration</h2>
+            
+            <!-- Master Controls -->
+            <div class="control-group">
+                <label>
+                    <input v-model="systemEnabled" type="checkbox">
+                    System Enabled
+                </label>
+                
+                <label>
+                    <input v-model="rainSensorOverride" type="checkbox">
+                    Override Rain Sensor
+                </label>
+            </div>
+            
+            <!-- Mode Selection -->
+            <div class="control-group">
+                <label>Irrigation Mode:</label>
+                <select v-model="irrigationMode">
+                    <option>Manual</option>
+                    <option>Scheduled</option>
+                    <option>Smart (Weather-based)</option>
+                    <option>Moisture-sensor</option>
+                </select>
+            </div>
+            
+            <!-- Numeric Controls -->
+            <div class="control-group">
+                <label>
+                    Water Pressure: {{ waterPressure }}%
+                    <input v-model.number="waterPressure" 
+                           type="range" min="0" max="100">
+                </label>
+                
+                <label>
+                    Flow Rate: {{ flowRate }} L/min
+                    <input v-model.number="flowRate" 
+                           type="range" min="0" max="20" step="0.5">
+                </label>
+                
+                <label>
+                    Duration (minutes):
+                    <input v-model.number="duration" 
+                           type="number" min="1" max="60">
+                </label>
+            </div>
+            
+            <!-- Zone Selection -->
+            <div class="control-group">
+                <label>Active Zones:</label>
+                <div>
+                    <label v-for="zone in availableZones" :key="zone">
+                        <input v-model="activeZones" 
+                               type="checkbox" 
+                               :value="zone">
+                        {{ zone }}
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Schedule Configuration -->
+            <div class="control-group" v-if="irrigationMode === 'Scheduled'">
+                <label>Watering Schedule:</label>
+                <div class="schedule-grid">
+                    <div v-for="time in timeSlots" 
+                         :key="time"
+                         class="time-slot"
+                         :class="{ active: schedule.includes(time) }"
+                         @click="toggleSchedule(time)">
+                        {{ time }}:00
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Smart Settings -->
+            <div class="control-group" v-if="irrigationMode === 'Smart (Weather-based)'">
+                <label>
+                    Temperature Threshold (°F):
+                    <input v-model.number="tempThreshold" 
+                           type="number" min="60" max="100">
+                </label>
+                
+                <label>
+                    Skip if rain expected in next
+                    <input v-model.number="rainForecastHours" 
+                           type="number" min="0" max="48" style="width: 60px;">
+                    hours
+                </label>
+            </div>
+            
+            <!-- Notes -->
+            <div class="control-group">
+                <label>
+                    System Notes:
+                    <textarea v-model.trim="systemNotes" 
+                              rows="3" 
+                              style="width: 100%;"
+                              placeholder="Add maintenance notes...">
+                    </textarea>
+                </label>
+            </div>
+        </div>
+        
+        <!-- Live Preview -->
+        <div class="control-panel">
+            <h2>Current Configuration Preview</h2>
+            <div class="preview">
+                <p><strong>Status:</strong> 
+                    <span :style="{ color: systemEnabled ? 'green' : 'red' }">
+                        {{ systemEnabled ? '✓ Active' : '✗ Disabled' }}
+                    </span>
+                </p>
+                
+                <p><strong>Mode:</strong> {{ irrigationMode }}</p>
+                
+                <p><strong>Settings:</strong></p>
+                <ul>
+                    <li>Pressure: {{ waterPressure }}%</li>
+                    <li>Flow: {{ flowRate }} L/min</li>
+                    <li>Duration: {{ duration }} minutes</li>
+                    <li>Water per cycle: {{ waterPerCycle }} liters</li>
+                </ul>
+                
+                <p><strong>Active Zones:</strong></p>
+                <div v-if="activeZones.length > 0">
+                    <span v-for="zone in activeZones" :key="zone" class="zone">
+                        {{ zone }}
+                    </span>
+                </div>
+                <div v-else>
+                    <em>No zones selected</em>
+                </div>
+                
+                <div v-if="irrigationMode === 'Scheduled' && schedule.length > 0">
+                    <p><strong>Schedule:</strong> {{ scheduleDisplay }}</p>
+                </div>
+                
+                <div v-if="systemNotes">
+                    <p><strong>Notes:</strong> {{ systemNotes }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Debug Panel -->
+        <div class="control-panel">
+            <h3>Raw Data (Debug)</h3>
+            <pre>{{ JSON.stringify(debugData, null, 2) }}</pre>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    // Boolean controls
+                    systemEnabled: true,
+                    rainSensorOverride: false,
+                    
+                    // Select control
+                    irrigationMode: 'Scheduled',
+                    
+                    // Numeric controls
+                    waterPressure: 75,
+                    flowRate: 10,
+                    duration: 15,
+                    
+                    // Multi-select
+                    activeZones: ['Front Lawn', 'Vegetable Garden'],
+                    availableZones: [
+                        'Front Lawn',
+                        'Back Lawn', 
+                        'Vegetable Garden',
+                        'Flower Beds',
+                        'Greenhouse'
+                    ],
+                    
+                    // Schedule
+                    schedule: [6, 18],
+                    timeSlots: [0, 3, 6, 9, 12, 15, 18, 21],
+                    
+                    // Smart settings
+                    tempThreshold: 85,
+                    rainForecastHours: 24,
+                    
+                    // Text
+                    systemNotes: ''
+                }
+            },
+            
+            computed: {
+                waterPerCycle() {
+                    return Math.round(this.flowRate * this.duration);
+                },
+                
+                scheduleDisplay() {
+                    return this.schedule
+                        .sort((a, b) => a - b)
+                        .map(h => `${h}:00`)
+                        .join(', ');
+                },
+                
+                debugData() {
+                    return {
+                        systemEnabled: this.systemEnabled,
+                        mode: this.irrigationMode,
+                        pressure: this.waterPressure,
+                        flow: this.flowRate,
+                        duration: this.duration,
+                        zones: this.activeZones,
+                        schedule: this.schedule
+                    };
+                }
+            },
+            
+            methods: {
+                toggleSchedule(time) {
+                    const index = this.schedule.indexOf(time);
+                    if (index > -1) {
+                        this.schedule.splice(index, 1);
+                    } else {
+                        this.schedule.push(time);
+                    }
+                }
+            },
+            
+            watch: {
+                irrigationMode(newMode) {
+                    console.log(`Irrigation mode changed to: ${newMode}`);
+                },
+                
+                activeZones(newZones) {
+                    console.log(`Active zones: ${newZones.join(', ')}`);
+                }
+            },
+            
+            mounted() {
+                console.log('💧 Irrigation control system initialized');
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
+#+END_SRC
+
+* The Flow of Reactivity (Understanding the Current)
+
+To truly master Vue's reactivity, you need to understand how data flows 
+through your application like water through a garden.
+
+** The Source and the Stream
+
+Data flows in one direction—from parent to child through props, like water 
+flowing downhill:
+
+#+BEGIN_SRC javascript
+// Parent (the reservoir)
+const WaterReservoir = {
+    data() {
+        return {
+            waterLevel: 1000,  // gallons
+            purity: 95,        // percentage
+            temperature: 68    // fahrenheit
+        }
+    },
+    
+    template: `
+        <div>
+            <h2>Main Reservoir</h2>
+            <!-- Water flows down to irrigation system -->
+            <irrigation-system 
+                :available-water="waterLevel"
+                :water-quality="purity"
+                :water-temp="temperature"
+            />
+        </div>
+    `
+}
+
+// Child (the irrigation system)
+const IrrigationSystem = {
+    props: ['availableWater', 'waterQuality', 'waterTemp'],
+    
+    computed: {
+        // Child can use parent's water but can't change the source
+        canIrrigate() {
+            return this.availableWater > 100 && this.waterQuality > 80;
+        }
+    }
+}
+#+END_SRC
+
+** Upstream Communication
+
+While water flows down, plants can signal upstream through events:
+
+#+BEGIN_SRC javascript
+// Child component signals need
+const ThirstyPlant = {
+    props: ['currentMoisture'],
+    
+    computed: {
+        needsWater() {
+            return this.currentMoisture < 30;
+        }
+    },
+    
+    watch: {
+        needsWater(isThirsty) {
+            if (isThirsty) {
+                // Signal upstream for water
+                this.$emit('request-water', {
+                    urgency: this.currentMoisture < 10 ? 'critical' : 'normal',
+                    amount: 50
+                });
+            }
+        }
+    }
+}
+
+// Parent responds to signals
+const GardenManager = {
+    methods: {
+        handleWaterRequest(request) {
+            if (request.urgency === 'critical') {
+                this.immediateWatering(request.amount);
+            } else {
+                this.scheduleWatering(request.amount);
+            }
+        }
+    },
+    
+    template: `
+        <thirsty-plant 
+            :current-moisture="moisture"
+            @request-water="handleWaterRequest"
+        />
+    `
+}
+#+END_SRC
+
+* Reactivity Gotchas: Garden Pests
+
+Even the best irrigation systems have quirks. Here are common reactivity 
+"pests" and how to handle them:
+
+** The Array Index Pest
+
+Vue can't detect when you directly set an array item by index:
+
+#+BEGIN_SRC javascript
+// This won't trigger updates (pest!)
+this.plants[2] = 'New Tomato';
+
+// Do this instead (pest control!)
+this.plants.splice(2, 1, 'New Tomato');
+// Or use Vue's method
+Vue.set(this.plants, 2, 'New Tomato');
+// Or replace the array
+this.plants = [...this.plants.slice(0, 2), 'New Tomato', ...this.plants.slice(3)];
+#+END_SRC
+
+** The New Property Pest
+
+Vue can't detect property addition to existing objects:
+
+#+BEGIN_SRC javascript
+// This won't be reactive (pest!)
+this.garden.newSection = 'Herb Garden';
+
+// Do this instead (pest control!)
+// In Vue 3, this is actually reactive!
+this.garden.newSection = 'Herb Garden';
+
+// Or use spread to create new object
+this.garden = { ...this.garden, newSection: 'Herb Garden' };
+#+END_SRC
+
+** The Async Update Pest
+
+Vue batches updates for efficiency. Sometimes you need to wait:
+
+#+BEGIN_SRC javascript
+methods: {
+    async plantAndWater() {
+        this.plantSeed();  // DOM hasn't updated yet
+        
+        // Wait for Vue to update the DOM
+        await this.$nextTick();
+        
+        // Now the DOM reflects the planted seed
+        this.waterNewPlant();
+    }
+}
+#+END_SRC
+
+* Exercises: Mastering the Flow
+
+** Exercise 1: The Smart Sprinkler System
+Create a reactive sprinkler system that:
+- Monitors soil moisture in multiple zones
+- Automatically activates when moisture drops below threshold
+- Adjusts duration based on temperature
+- Logs all watering events
+
+** Exercise 2: The Garden Dashboard
+Build a reactive dashboard showing:
+- Real-time moisture levels (use computed properties)
+- Water usage over time (use watchers)
+- Automatic alerts for dry conditions
+- Predictive watering schedule based on weather
+
+** Exercise 3: The Plant Health Monitor
+Create a system that:
+- Tracks health metrics for multiple plants
+- Uses computed properties to calculate overall garden health
+- Watches for critical conditions and triggers alerts
+- Provides care recommendations based on current state
+
+** Exercise 4: The Reactive Greenhouse
+Build a greenhouse controller with:
+- Temperature and humidity controls (v-model)
+- Automated responses to condition changes (watchers)
+- Optimal condition calculator (computed)
+- Manual override system
+
+* Closing Thoughts
+
+You've installed the irrigation system—Vue's reactivity—that keeps your 
+garden alive. You understand how data flows like water through your 
+application, automatically nourishing every component that depends on it.
+
+You've learned:
+- How Vue tracks dependencies and triggers updates
+- The power of computed properties for derived values
+- How watchers observe and respond to changes
+- The two-way binding of v-model
+- The flow of data through your application
+
+Your garden now has a sophisticated watering system. Turn a valve here, 
+and water appears there. Change data at the source, and updates flow 
+throughout your application. No more carrying buckets of data by hand.
+
+But a garden needs paths for visitors to explore. In the next chapter, 
+we'll build the garden paths—Vue Router—that guide users through your 
+digital landscape.
+
+For now, listen to the sound of water flowing through your reactive 
+garden. Watch how a single change ripples through the entire system. 
+This is the magic of reactivity—the lifeblood of your Vue application.
+
+---
+
+/Evening mist rises from the freshly watered garden. The irrigation/
+/system hums quietly, ready to respond to the slightest change in/
+/conditions. Your garden is truly alive./

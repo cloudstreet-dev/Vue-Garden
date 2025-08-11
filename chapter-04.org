@@ -1,0 +1,1281 @@
+#+TITLE: Chapter 4: Garden Paths
+#+SUBTITLE: Vue Router - Guiding Visitors Through Your Digital Landscape
+
+* Chapter 4: Garden Paths (Routing)
+
+A garden without paths is just wilderness. Visitors wander aimlessly, 
+trampling flowers, missing hidden treasures, unable to find what they 
+seek. Paths transform a garden from chaos to experience—guiding visitors 
+from the entrance gate to the rose garden, from the herb spiral to the 
+meditation pond.
+
+Vue Router creates these paths in your application. It guides users through 
+your digital garden, ensuring they can explore every carefully cultivated 
+corner while keeping them from wandering into the compost heap.
+
+Let's lay down some stepping stones.
+
+* Planning Pathways (Vue Router Basics)
+
+Before laying a single stone, gardeners plan their paths. Where should 
+they lead? How wide should they be? What journey do they create? Vue 
+Router requires the same thoughtful planning.
+
+** Installing the Pathway System
+
+First, we need to bring in the path-building materials:
+
+#+BEGIN_SRC bash
+# Install Vue Router in your garden
+npm install vue-router@4
+#+END_SRC
+
+** Designing Your Garden Map
+
+Every garden needs a map. Here's how to create one with Vue Router:
+
+#+BEGIN_SRC javascript
+// router.js - Your garden map
+import { createRouter, createWebHistory } from 'vue-router';
+
+// Import the different garden areas (components)
+import EntranceGate from './components/EntranceGate.vue';
+import RoseGarden from './components/RoseGarden.vue';
+import VegetablePatch from './components/VegetablePatch.vue';
+import HerbSpiral from './components/HerbSpiral.vue';
+import SecretGarden from './components/SecretGarden.vue';
+
+// Define the paths through your garden
+const routes = [
+    {
+        path: '/',
+        name: 'entrance',
+        component: EntranceGate,
+        meta: { 
+            title: 'Welcome to the Garden',
+            isPublic: true 
+        }
+    },
+    {
+        path: '/roses',
+        name: 'rose-garden',
+        component: RoseGarden,
+        meta: { 
+            title: 'Rose Garden',
+            season: 'summer' 
+        }
+    },
+    {
+        path: '/vegetables',
+        name: 'vegetable-patch',
+        component: VegetablePatch,
+        meta: { 
+            title: 'Vegetable Patch',
+            requiresGloves: true 
+        }
+    },
+    {
+        path: '/herbs',
+        name: 'herb-spiral',
+        component: HerbSpiral,
+        meta: { 
+            title: 'Herb Spiral',
+            fragrant: true 
+        }
+    },
+    {
+        path: '/secret',
+        name: 'secret-garden',
+        component: SecretGarden,
+        meta: { 
+            title: 'Secret Garden',
+            requiresKey: true 
+        }
+    }
+];
+
+// Create the router (pathfinder)
+const router = createRouter({
+    history: createWebHistory(),
+    routes
+});
+
+export default router;
+#+END_SRC
+
+** Laying the Main Path
+
+Now connect your router to your Vue application:
+
+#+BEGIN_SRC javascript
+// main.js - Installing the path system
+import { createApp } from 'vue';
+import App from './App.vue';
+import router from './router';
+
+const app = createApp(App);
+
+// Install the pathway system
+app.use(router);
+
+app.mount('#app');
+#+END_SRC
+
+** The Garden Layout
+
+Your main application needs a place for different garden views:
+
+#+BEGIN_SRC vue
+<!-- App.vue - The main garden structure -->
+<template>
+  <div id="garden">
+    <!-- Garden Header with Navigation -->
+    <nav class="garden-nav">
+      <h1>🌻 Vue Garden</h1>
+      
+      <!-- Path markers (navigation links) -->
+      <div class="path-markers">
+        <router-link to="/">Entrance</router-link>
+        <router-link to="/roses">Rose Garden</router-link>
+        <router-link to="/vegetables">Vegetables</router-link>
+        <router-link to="/herbs">Herbs</router-link>
+        <router-link to="/secret">Secret Garden</router-link>
+      </div>
+    </nav>
+    
+    <!-- The viewing area - different garden sections appear here -->
+    <main class="garden-view">
+      <router-view />
+    </main>
+    
+    <!-- Garden Footer -->
+    <footer class="garden-info">
+      <p>Current location: {{ $route.path }}</p>
+    </footer>
+  </div>
+</template>
+
+<style>
+.garden-nav {
+  background: #2e7d32;
+  color: white;
+  padding: 20px;
+}
+
+.path-markers {
+  display: flex;
+  gap: 20px;
+  margin-top: 10px;
+}
+
+.path-markers a {
+  color: white;
+  text-decoration: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  background: rgba(255,255,255,0.1);
+}
+
+.path-markers a.router-link-active {
+  background: rgba(255,255,255,0.3);
+  font-weight: bold;
+}
+
+.garden-view {
+  min-height: 400px;
+  padding: 20px;
+}
+</style>
+#+END_SRC
+
+* Stepping Stones (Route Parameters)
+
+Not all paths are simple straight lines. Some wind through the garden, 
+with each step revealing something new. Route parameters are like numbered 
+stepping stones—each one unique but part of the same path.
+
+** Dynamic Garden Paths
+
+Imagine a path to view individual plants:
+
+#+BEGIN_SRC javascript
+// Routes with parameters - like plant labels
+const routes = [
+    {
+        path: '/plant/:id',
+        name: 'plant-detail',
+        component: PlantDetail
+    },
+    {
+        path: '/bed/:bedNumber/plant/:plantId',
+        name: 'specific-plant',
+        component: PlantInBed
+    }
+];
+#+END_SRC
+
+** Reading the Path Markers
+
+Components can read these parameters like reading plant labels:
+
+#+BEGIN_SRC vue
+<!-- PlantDetail.vue -->
+<template>
+  <div class="plant-detail">
+    <h2>Plant #{{ plantId }}</h2>
+    <p>You're viewing plant {{ plantId }} in the garden.</p>
+    
+    <!-- The plant data based on ID -->
+    <div v-if="plant">
+      <h3>{{ plant.name }}</h3>
+      <p>Type: {{ plant.type }}</p>
+      <p>Water needs: {{ plant.waterNeeds }}</p>
+      <p>Sun requirements: {{ plant.sunRequirements }}</p>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  computed: {
+    plantId() {
+      return this.$route.params.id;
+    },
+    
+    plant() {
+      // Find plant data based on route parameter
+      return this.findPlantById(this.plantId);
+    }
+  },
+  
+  methods: {
+    findPlantById(id) {
+      const plants = {
+        '1': { name: 'Tomato', type: 'Vegetable', waterNeeds: 'High', sunRequirements: 'Full sun' },
+        '2': { name: 'Basil', type: 'Herb', waterNeeds: 'Medium', sunRequirements: 'Partial shade' },
+        '3': { name: 'Rose', type: 'Flower', waterNeeds: 'Medium', sunRequirements: 'Full sun' }
+      };
+      return plants[id];
+    }
+  },
+  
+  watch: {
+    // Watch for route changes to same component
+    '$route.params.id'(newId) {
+      console.log(`Now viewing plant ${newId}`);
+      // Refresh plant data
+    }
+  }
+}
+</script>
+#+END_SRC
+
+** Query Stones (Query Parameters)
+
+Sometimes you want optional information on your path, like filters or 
+search terms:
+
+#+BEGIN_SRC javascript
+// Navigate with query parameters
+this.$router.push({
+    path: '/plants',
+    query: {
+        type: 'vegetable',
+        season: 'summer',
+        sunlight: 'full'
+    }
+});
+// Results in: /plants?type=vegetable&season=summer&sunlight=full
+
+// Read query parameters in component
+computed: {
+    filterType() {
+        return this.$route.query.type || 'all';
+    },
+    
+    season() {
+        return this.$route.query.season || 'current';
+    }
+}
+#+END_SRC
+
+* Garden Gates (Navigation Guards)
+
+Not every path in a garden is always open. Some areas might be closed 
+for maintenance, require special access, or only open during certain 
+seasons. Navigation guards are your garden gates and gatekeepers.
+
+** The Main Gate (Global Guards)
+
+Set up security at your garden's main entrance:
+
+#+BEGIN_SRC javascript
+// Global before guard - the main gatekeeper
+router.beforeEach((to, from, next) => {
+    console.log(`Attempting to go from ${from.path} to ${to.path}`);
+    
+    // Check if it's the right season for this area
+    if (to.meta.season) {
+        const currentSeason = getCurrentSeason();
+        if (to.meta.season !== currentSeason) {
+            alert(`The ${to.name} is only open in ${to.meta.season}`);
+            next(false); // Block entry
+            return;
+        }
+    }
+    
+    // Check if visitor has the key for secret areas
+    if (to.meta.requiresKey) {
+        const hasKey = checkForSecretKey();
+        if (!hasKey) {
+            console.log('No key for secret garden!');
+            next('/'); // Redirect to entrance
+            return;
+        }
+    }
+    
+    // Open the gate
+    next();
+});
+
+// After navigation - like a guest book
+router.afterEach((to, from) => {
+    // Log the visit
+    console.log(`Visitor moved from ${from.path} to ${to.path}`);
+    
+    // Update page title
+    document.title = to.meta.title || 'Vue Garden';
+});
+#+END_SRC
+
+** Individual Gates (Route Guards)
+
+Each garden area can have its own entrance requirements:
+
+#+BEGIN_SRC javascript
+const routes = [
+    {
+        path: '/greenhouse',
+        component: Greenhouse,
+        beforeEnter: (to, from, next) => {
+            // Check temperature before entering greenhouse
+            const temp = getCurrentTemperature();
+            if (temp > 100) {
+                alert('Too hot in the greenhouse! Come back later.');
+                next(false);
+            } else {
+                next();
+            }
+        }
+    },
+    {
+        path: '/compost',
+        component: CompostArea,
+        beforeEnter: [
+            checkIfWearingGloves,
+            checkIfHoldingNose,
+            confirmReadyForSmell
+        ]
+    }
+];
+#+END_SRC
+
+** Component Gatekeepers
+
+Components can also control access:
+
+#+BEGIN_SRC vue
+<script>
+export default {
+    // Before entering this garden section
+    beforeRouteEnter(to, from, next) {
+        console.log("Preparing the garden view...");
+        // Can't access 'this' here - component not created yet
+        next(vm => {
+            // But can access it in the callback
+            vm.prepareGarden();
+        });
+    },
+    
+    // Before leaving this garden section
+    beforeRouteLeave(to, from, next) {
+        if (this.hasUnsavedChanges) {
+            const answer = confirm('Leave without saving your garden notes?');
+            if (answer) {
+                next();
+            } else {
+                next(false);
+            }
+        } else {
+            next();
+        }
+    },
+    
+    // When route params change but staying in same component
+    beforeRouteUpdate(to, from, next) {
+        // For example, going from /plant/1 to /plant/2
+        this.loadPlantData(to.params.id);
+        next();
+    }
+}
+</script>
+#+END_SRC
+
+* Secret Gardens (Nested Routes)
+
+Gardens often have gardens within gardens—a main area with smaller themed 
+sections. Nested routes create this hierarchy.
+
+** Creating Garden Rooms
+
+#+BEGIN_SRC javascript
+const routes = [
+    {
+        path: '/garden',
+        component: MainGarden,
+        children: [
+            {
+                path: '', // /garden
+                component: GardenOverview
+            },
+            {
+                path: 'roses', // /garden/roses
+                component: RoseSection,
+                children: [
+                    {
+                        path: 'red', // /garden/roses/red
+                        component: RedRoses
+                    },
+                    {
+                        path: 'white', // /garden/roses/white
+                        component: WhiteRoses
+                    }
+                ]
+            },
+            {
+                path: 'pond', // /garden/pond
+                component: WaterFeature,
+                children: [
+                    {
+                        path: 'fish', // /garden/pond/fish
+                        component: KoiViewer
+                    },
+                    {
+                        path: 'plants', // /garden/pond/plants
+                        component: WaterPlants
+                    }
+                ]
+            }
+        ]
+    }
+];
+#+END_SRC
+
+** The Garden Layout with Rooms
+
+#+BEGIN_SRC vue
+<!-- MainGarden.vue -->
+<template>
+  <div class="main-garden">
+    <h1>Welcome to the Main Garden</h1>
+    
+    <!-- Sub-navigation for garden sections -->
+    <nav class="garden-sections">
+      <router-link to="/garden">Overview</router-link>
+      <router-link to="/garden/roses">Rose Garden</router-link>
+      <router-link to="/garden/pond">Water Feature</router-link>
+    </nav>
+    
+    <!-- Nested view - garden within garden -->
+    <div class="garden-room">
+      <router-view />
+    </div>
+  </div>
+</template>
+#+END_SRC
+
+* Complete Garden Tour System
+
+Let's build a complete garden tour application with routing:
+
+#+BEGIN_SRC html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vue Garden Tours</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        #app {
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .garden-header {
+            background: rgba(255,255,255,0.95);
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .nav-menu {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .nav-menu a {
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s;
+        }
+        
+        .nav-menu a:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        
+        .nav-menu a.router-link-active {
+            background: #2196F3;
+        }
+        
+        .garden-content {
+            padding: 20px;
+            min-height: 400px;
+        }
+        
+        .garden-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .plant-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .plant-card {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        
+        .plant-card:hover {
+            transform: scale(1.05);
+        }
+        
+        .plant-emoji {
+            font-size: 48px;
+            margin: 10px 0;
+        }
+        
+        .tour-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .breadcrumb {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.9);
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="garden-header">
+            <h1>🌺 Vue Garden Tours</h1>
+            <p>Explore our beautiful digital garden</p>
+            
+            <nav class="nav-menu">
+                <router-link to="/">Home</router-link>
+                <router-link to="/tours">Tours</router-link>
+                <router-link to="/plants">Plants</router-link>
+                <router-link to="/seasons">Seasons</router-link>
+                <router-link to="/map">Garden Map</router-link>
+            </nav>
+        </div>
+        
+        <!-- Breadcrumb trail -->
+        <div class="breadcrumb" v-if="breadcrumbs.length > 0">
+            <span v-for="(crumb, index) in breadcrumbs" :key="index">
+                <router-link :to="crumb.path">{{ crumb.name }}</router-link>
+                <span v-if="index < breadcrumbs.length - 1"> > </span>
+            </span>
+        </div>
+        
+        <div class="garden-content">
+            <transition name="fade" mode="out-in">
+                <router-view :key="$route.fullPath"></router-view>
+            </transition>
+        </div>
+        
+        <!-- Tour Guide Modal -->
+        <div v-if="showGuide" class="modal" @click="showGuide = false">
+            <div class="modal-content" @click.stop>
+                <h2>🧭 Tour Guide</h2>
+                <p>{{ guideMessage }}</p>
+                <button @click="showGuide = false">Got it!</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/vue-router@4/dist/vue-router.global.js"></script>
+    <script>
+        const { createApp } = Vue;
+        const { createRouter, createWebHashHistory } = VueRouter;
+        
+        // Component: Home
+        const Home = {
+            template: `
+                <div class="garden-section">
+                    <h2>🏡 Welcome to Vue Garden</h2>
+                    <p>Your journey through our digital garden begins here.</p>
+                    
+                    <div class="tour-info">
+                        <h3>Quick Start Tours:</h3>
+                        <button @click="$router.push('/tours/beginner')">
+                            🌱 Beginner Tour
+                        </button>
+                        <button @click="$router.push('/tours/advanced')">
+                            🌳 Advanced Tour
+                        </button>
+                        <button @click="randomExplore">
+                            🎲 Random Explore
+                        </button>
+                    </div>
+                    
+                    <div class="tour-info">
+                        <h3>Garden Statistics:</h3>
+                        <p>🌸 Total Plants: {{ plantCount }}</p>
+                        <p>🗓️ Current Season: {{ currentSeason }}</p>
+                        <p>👥 Visitors Today: {{ visitorCount }}</p>
+                    </div>
+                </div>
+            `,
+            data() {
+                return {
+                    plantCount: 42,
+                    currentSeason: 'Spring',
+                    visitorCount: 128
+                }
+            },
+            methods: {
+                randomExplore() {
+                    const areas = ['/plants/1', '/plants/2', '/seasons/summer', '/map'];
+                    const random = areas[Math.floor(Math.random() * areas.length)];
+                    this.$router.push(random);
+                }
+            }
+        };
+        
+        // Component: Tours List
+        const Tours = {
+            template: `
+                <div class="garden-section">
+                    <h2>🚶 Available Tours</h2>
+                    <div class="tour-info" v-for="tour in tours" :key="tour.id">
+                        <h3>{{ tour.name }}</h3>
+                        <p>{{ tour.description }}</p>
+                        <p>Duration: {{ tour.duration }} minutes</p>
+                        <button @click="startTour(tour.id)">Start Tour</button>
+                    </div>
+                </div>
+            `,
+            data() {
+                return {
+                    tours: [
+                        {
+                            id: 'beginner',
+                            name: '🌱 Beginner Garden Tour',
+                            description: 'Perfect for first-time visitors',
+                            duration: 15
+                        },
+                        {
+                            id: 'advanced',
+                            name: '🌳 Advanced Botanical Tour',
+                            description: 'Deep dive into rare species',
+                            duration: 45
+                        },
+                        {
+                            id: 'night',
+                            name: '🌙 Moonlight Garden Walk',
+                            description: 'Experience the garden after dark',
+                            duration: 30
+                        }
+                    ]
+                }
+            },
+            methods: {
+                startTour(tourId) {
+                    this.$router.push(`/tours/${tourId}`);
+                }
+            }
+        };
+        
+        // Component: Tour Detail
+        const TourDetail = {
+            template: `
+                <div class="garden-section">
+                    <h2>{{ tour.name }}</h2>
+                    <p>{{ tour.description }}</p>
+                    
+                    <div class="tour-info">
+                        <h3>Tour Stops:</h3>
+                        <ol>
+                            <li v-for="stop in tour.stops" :key="stop">
+                                {{ stop }}
+                            </li>
+                        </ol>
+                    </div>
+                    
+                    <button @click="previousStop" :disabled="currentStop === 0">
+                        Previous
+                    </button>
+                    <span> Stop {{ currentStop + 1 }} of {{ tour.stops.length }} </span>
+                    <button @click="nextStop" :disabled="currentStop >= tour.stops.length - 1">
+                        Next
+                    </button>
+                    
+                    <button @click="$router.push('/tours')" style="margin-left: 20px;">
+                        End Tour
+                    </button>
+                </div>
+            `,
+            data() {
+                return {
+                    currentStop: 0,
+                    tours: {
+                        beginner: {
+                            name: '🌱 Beginner Tour',
+                            description: 'A gentle introduction to our garden',
+                            stops: ['Entrance Garden', 'Herb Spiral', 'Butterfly Garden', 'Rest Area']
+                        },
+                        advanced: {
+                            name: '🌳 Advanced Tour',
+                            description: 'Explore rare and exotic plants',
+                            stops: ['Tropical Greenhouse', 'Desert Biome', 'Alpine Garden', 'Orchid House', 'Bonsai Collection']
+                        }
+                    }
+                }
+            },
+            computed: {
+                tourId() {
+                    return this.$route.params.tourId;
+                },
+                tour() {
+                    return this.tours[this.tourId] || this.tours.beginner;
+                }
+            },
+            methods: {
+                nextStop() {
+                    if (this.currentStop < this.tour.stops.length - 1) {
+                        this.currentStop++;
+                    }
+                },
+                previousStop() {
+                    if (this.currentStop > 0) {
+                        this.currentStop--;
+                    }
+                }
+            },
+            watch: {
+                currentStop(newStop) {
+                    console.log(`Now at: ${this.tour.stops[newStop]}`);
+                }
+            }
+        };
+        
+        // Component: Plants
+        const Plants = {
+            template: `
+                <div class="garden-section">
+                    <h2>🌿 Plant Collection</h2>
+                    
+                    <div>
+                        <label>Filter by type: </label>
+                        <select v-model="filterType" @change="updateFilter">
+                            <option value="all">All Plants</option>
+                            <option value="flower">Flowers</option>
+                            <option value="vegetable">Vegetables</option>
+                            <option value="herb">Herbs</option>
+                        </select>
+                    </div>
+                    
+                    <div class="plant-grid">
+                        <div 
+                            v-for="plant in filteredPlants" 
+                            :key="plant.id"
+                            class="plant-card"
+                            @click="viewPlant(plant.id)">
+                            <div class="plant-emoji">{{ plant.emoji }}</div>
+                            <h3>{{ plant.name }}</h3>
+                            <p>{{ plant.type }}</p>
+                        </div>
+                    </div>
+                </div>
+            `,
+            data() {
+                return {
+                    filterType: 'all',
+                    plants: [
+                        { id: 1, name: 'Rose', emoji: '🌹', type: 'flower' },
+                        { id: 2, name: 'Tomato', emoji: '🍅', type: 'vegetable' },
+                        { id: 3, name: 'Basil', emoji: '🌿', type: 'herb' },
+                        { id: 4, name: 'Sunflower', emoji: '🌻', type: 'flower' },
+                        { id: 5, name: 'Carrot', emoji: '🥕', type: 'vegetable' },
+                        { id: 6, name: 'Lavender', emoji: '💜', type: 'herb' }
+                    ]
+                }
+            },
+            computed: {
+                filteredPlants() {
+                    if (this.filterType === 'all') {
+                        return this.plants;
+                    }
+                    return this.plants.filter(p => p.type === this.filterType);
+                }
+            },
+            methods: {
+                viewPlant(id) {
+                    this.$router.push(`/plants/${id}`);
+                },
+                updateFilter() {
+                    this.$router.push({
+                        query: { type: this.filterType }
+                    });
+                }
+            },
+            created() {
+                // Read filter from URL
+                this.filterType = this.$route.query.type || 'all';
+            }
+        };
+        
+        // Component: Plant Detail
+        const PlantDetail = {
+            template: `
+                <div class="garden-section">
+                    <button @click="$router.back()">← Back to Plants</button>
+                    
+                    <div v-if="plant" style="text-align: center; margin-top: 20px;">
+                        <div style="font-size: 96px;">{{ plant.emoji }}</div>
+                        <h2>{{ plant.name }}</h2>
+                        <p>Type: {{ plant.type }}</p>
+                        <p>Water needs: {{ plant.waterNeeds }}</p>
+                        <p>Sunlight: {{ plant.sunlight }}</p>
+                        
+                        <div class="tour-info">
+                            <h3>Care Instructions:</h3>
+                            <p>{{ plant.care }}</p>
+                        </div>
+                        
+                        <button @click="nextPlant">View Next Plant →</button>
+                    </div>
+                    <div v-else>
+                        <p>Plant not found!</p>
+                    </div>
+                </div>
+            `,
+            data() {
+                return {
+                    plantsData: {
+                        1: { 
+                            name: 'Rose', 
+                            emoji: '🌹', 
+                            type: 'flower',
+                            waterNeeds: 'Medium',
+                            sunlight: 'Full sun',
+                            care: 'Prune regularly and watch for aphids.'
+                        },
+                        2: { 
+                            name: 'Tomato', 
+                            emoji: '🍅', 
+                            type: 'vegetable',
+                            waterNeeds: 'High',
+                            sunlight: 'Full sun',
+                            care: 'Support with stakes and water consistently.'
+                        },
+                        3: { 
+                            name: 'Basil', 
+                            emoji: '🌿', 
+                            type: 'herb',
+                            waterNeeds: 'Medium',
+                            sunlight: 'Partial shade',
+                            care: 'Pinch flowers to encourage bushy growth.'
+                        }
+                    }
+                }
+            },
+            computed: {
+                plantId() {
+                    return this.$route.params.id;
+                },
+                plant() {
+                    return this.plantsData[this.plantId];
+                }
+            },
+            methods: {
+                nextPlant() {
+                    const nextId = (parseInt(this.plantId) % 3) + 1;
+                    this.$router.push(`/plants/${nextId}`);
+                }
+            }
+        };
+        
+        // Component: Seasons
+        const Seasons = {
+            template: `
+                <div class="garden-section">
+                    <h2>🗓️ Seasonal Garden Guide</h2>
+                    <div class="plant-grid">
+                        <div 
+                            v-for="season in seasons" 
+                            :key="season.name"
+                            class="plant-card"
+                            @click="$router.push('/seasons/' + season.path)">
+                            <div class="plant-emoji">{{ season.emoji }}</div>
+                            <h3>{{ season.name }}</h3>
+                            <p>{{ season.months }}</p>
+                        </div>
+                    </div>
+                </div>
+            `,
+            data() {
+                return {
+                    seasons: [
+                        { name: 'Spring', emoji: '🌸', months: 'March - May', path: 'spring' },
+                        { name: 'Summer', emoji: '☀️', months: 'June - August', path: 'summer' },
+                        { name: 'Fall', emoji: '🍂', months: 'September - November', path: 'fall' },
+                        { name: 'Winter', emoji: '❄️', months: 'December - February', path: 'winter' }
+                    ]
+                }
+            }
+        };
+        
+        // Component: Garden Map
+        const GardenMap = {
+            template: `
+                <div class="garden-section">
+                    <h2>🗺️ Garden Map</h2>
+                    <p>Interactive map coming soon!</p>
+                    <div style="text-align: center; margin: 40px 0;">
+                        <div style="font-size: 150px;">🗺️</div>
+                        <p>Explore different areas of our garden</p>
+                    </div>
+                </div>
+            `
+        };
+        
+        // Component: 404
+        const NotFound = {
+            template: `
+                <div class="garden-section">
+                    <h2>🌵 Lost in the Garden</h2>
+                    <p>This path doesn't seem to exist!</p>
+                    <div style="font-size: 100px; text-align: center; margin: 20px;">🧭</div>
+                    <button @click="$router.push('/')">Return to Entrance</button>
+                </div>
+            `
+        };
+        
+        // Routes
+        const routes = [
+            { 
+                path: '/', 
+                component: Home,
+                name: 'home',
+                meta: { title: 'Welcome' }
+            },
+            { 
+                path: '/tours', 
+                component: Tours,
+                name: 'tours',
+                meta: { title: 'Garden Tours' }
+            },
+            { 
+                path: '/tours/:tourId', 
+                component: TourDetail,
+                name: 'tour-detail',
+                meta: { title: 'Tour in Progress' }
+            },
+            { 
+                path: '/plants', 
+                component: Plants,
+                name: 'plants',
+                meta: { title: 'Plant Collection' }
+            },
+            { 
+                path: '/plants/:id', 
+                component: PlantDetail,
+                name: 'plant-detail',
+                meta: { title: 'Plant Details' }
+            },
+            { 
+                path: '/seasons', 
+                component: Seasons,
+                name: 'seasons',
+                meta: { title: 'Seasonal Guide' }
+            },
+            { 
+                path: '/map', 
+                component: GardenMap,
+                name: 'map',
+                meta: { title: 'Garden Map' }
+            },
+            { 
+                path: '/:pathMatch(.*)*', 
+                component: NotFound,
+                name: 'not-found',
+                meta: { title: '404 - Lost' }
+            }
+        ];
+        
+        // Create router
+        const router = createRouter({
+            history: createWebHashHistory(),
+            routes
+        });
+        
+        // Navigation guards
+        router.beforeEach((to, from, next) => {
+            console.log(`Navigating from ${from.path} to ${to.path}`);
+            document.title = to.meta.title ? `${to.meta.title} | Vue Garden` : 'Vue Garden';
+            next();
+        });
+        
+        // Create app
+        const app = createApp({
+            data() {
+                return {
+                    showGuide: false,
+                    guideMessage: ''
+                }
+            },
+            computed: {
+                breadcrumbs() {
+                    const crumbs = [];
+                    const path = this.$route.path;
+                    
+                    if (path !== '/') {
+                        crumbs.push({ name: 'Home', path: '/' });
+                        
+                        if (path.includes('/tours/')) {
+                            crumbs.push({ name: 'Tours', path: '/tours' });
+                        } else if (path.includes('/plants/')) {
+                            crumbs.push({ name: 'Plants', path: '/plants' });
+                        }
+                    }
+                    
+                    return crumbs;
+                }
+            },
+            mounted() {
+                // Show welcome guide
+                setTimeout(() => {
+                    this.guideMessage = 'Welcome to Vue Garden! Use the navigation menu to explore different areas.';
+                    this.showGuide = true;
+                }, 1000);
+            }
+        });
+        
+        app.use(router);
+        app.mount('#app');
+    </script>
+</body>
+</html>
+#+END_SRC
+
+* Path Patterns: Garden Design Wisdom
+
+As you design your garden paths, certain patterns emerge:
+
+** The Hub Pattern
+
+Create a central area with paths radiating outward:
+
+#+BEGIN_SRC javascript
+const routes = [
+    {
+        path: '/garden',
+        component: GardenHub,
+        children: [
+            { path: 'north', component: NorthGarden },
+            { path: 'south', component: SouthGarden },
+            { path: 'east', component: EastGarden },
+            { path: 'west', component: WestGarden }
+        ]
+    }
+];
+#+END_SRC
+
+** The Progressive Discovery Pattern
+
+Guide visitors deeper into the garden:
+
+#+BEGIN_SRC javascript
+const routes = [
+    {
+        path: '/entrance',
+        component: Entrance,
+        beforeEnter: (to, from, next) => {
+            if (!hasVisited('entrance')) {
+                showTutorial('entrance');
+            }
+            next();
+        }
+    },
+    {
+        path: '/main-garden',
+        component: MainGarden,
+        meta: { requiresEntrance: true }
+    },
+    {
+        path: '/secret-garden',
+        component: SecretGarden,
+        meta: { requiresMainGarden: true }
+    }
+];
+#+END_SRC
+
+** The Seasonal Pattern
+
+Different paths for different times:
+
+#+BEGIN_SRC javascript
+const getSeasonalRoutes = () => {
+    const season = getCurrentSeason();
+    
+    return [
+        {
+            path: '/featured',
+            component: season === 'spring' ? SpringBlossoms :
+                      season === 'summer' ? SummerBlooms :
+                      season === 'fall' ? AutumnColors :
+                      WinterWonderland
+        }
+    ];
+};
+#+END_SRC
+
+* Exercises: Building Your Path Network
+
+** Exercise 1: The Garden Gallery
+Create a photo gallery with routing:
+- Grid view of garden photos at `/gallery`
+- Individual photo view at `/gallery/:photoId`
+- Categories at `/gallery/category/:categoryName`
+- Breadcrumb navigation
+
+** Exercise 2: The Plant Encyclopedia
+Build a searchable plant database:
+- Search page with filters
+- Results update URL with query parameters
+- Individual plant pages with tabs (care, photos, reviews)
+- Recently viewed plants tracking
+
+** Exercise 3: The Virtual Tour
+Create an interactive garden tour:
+- Multiple tour routes with stops
+- Progress tracking in URL
+- Skip to any stop functionality
+- Tour completion certificate
+
+** Exercise 4: The Garden Planner
+Design a garden planning tool:
+- Multi-step form with route for each step
+- Save progress in route params
+- Preview route before final submission
+- Guard to prevent leaving with unsaved changes
+
+* Closing Thoughts
+
+You've laid the paths through your Vue garden. No longer do visitors 
+wander aimlessly—they follow carefully planned routes that reveal your 
+garden's beauty in the perfect sequence.
+
+You've learned:
+- How to create and configure routes
+- Dynamic routing with parameters
+- Navigation guards for access control
+- Nested routes for complex layouts
+- Programmatic navigation
+
+Your garden now has structure. Visitors can find their way from the 
+entrance to the rose garden, from the vegetables to the secret pond. 
+Each path has purpose, each turn reveals something new.
+
+But what about the tools we use to maintain this garden? In the next 
+chapter, we'll organize our tool shed—exploring state management with 
+Pinia and Vuex, the central storage for all our gardening equipment.
+
+For now, walk your new paths. Feel how they guide you naturally from 
+one beautiful vista to the next. This is the art of routing—creating 
+journeys, not just destinations.
+
+---
+
+/Sunset paints the garden paths golden. Each stone you've placed/
+/creates a journey, each route tells a story. Tomorrow, we'll/
+/organize the tools that keep everything growing./

@@ -1,0 +1,1490 @@
+#+TITLE: Chapter 6: Composting
+#+SUBTITLE: The Composition API - Recycling Logic Into Rich, Reusable Patterns
+
+* Chapter 6: Composting (Composition API)
+
+Every experienced gardener knows the secret of composting. You take organic 
+matter—kitchen scraps, fallen leaves, grass clippings—and transform them 
+into black gold: nutrient-rich compost that makes everything grow better.
+
+The Composition API is Vue's composting system. You take pieces of logic—
+data handling, computed properties, lifecycle hooks—and compose them into 
+reusable, nutrient-rich functions that can enrich any component. No more 
+copying code like scattering seeds. Instead, you create rich, reusable 
+patterns that make your entire application flourish.
+
+Let's learn the art of digital composting.
+
+* Rich Soil Amendment (The Setup Function)
+
+The `setup()` function is your compost bin—where you mix all your 
+ingredients before adding them to your garden soil.
+
+** Your First Compost Bin
+
+#+BEGIN_SRC vue
+<template>
+  <div class="garden-bed">
+    <h2>{{ bedName }}</h2>
+    <p>Moisture Level: {{ moistureLevel }}%</p>
+    <p>Health Status: {{ healthStatus }}</p>
+    <button @click="water">💧 Water Plants</button>
+    <button @click="fertilize">🌱 Add Compost</button>
+  </div>
+</template>
+
+<script>
+import { ref, computed, onMounted } from 'vue';
+
+export default {
+  name: 'GardenBed',
+  
+  setup() {
+    // Reactive soil (data)
+    const bedName = ref('Tomato Bed');
+    const moistureLevel = ref(50);
+    const nutrients = ref(75);
+    
+    // Computed compost (derived state)
+    const healthStatus = computed(() => {
+      const average = (moistureLevel.value + nutrients.value) / 2;
+      if (average > 80) return '🌟 Thriving';
+      if (average > 60) return '🌱 Healthy';
+      if (average > 40) return '🍂 Needs attention';
+      return '🥀 Critical';
+    });
+    
+    // Garden actions (methods)
+    const water = () => {
+      moistureLevel.value = Math.min(100, moistureLevel.value + 20);
+      console.log('Watered the garden bed');
+    };
+    
+    const fertilize = () => {
+      nutrients.value = Math.min(100, nutrients.value + 15);
+      console.log('Added compost to the bed');
+    };
+    
+    // Lifecycle composting
+    onMounted(() => {
+      console.log(`${bedName.value} is ready for planting!`);
+    });
+    
+    // Return the enriched soil to the template
+    return {
+      bedName,
+      moistureLevel,
+      nutrients,
+      healthStatus,
+      water,
+      fertilize
+    };
+  }
+}
+</script>
+#+END_SRC
+
+** Understanding the Compost Ingredients
+
+The setup function combines different ingredients:
+
+#+BEGIN_SRC javascript
+import { 
+  ref,        // Creates reactive references (like fresh kitchen scraps)
+  reactive,   // Creates reactive objects (like leaf mulch)
+  computed,   // Derives new values (like finished compost)
+  watch,      // Monitors changes (like temperature monitoring)
+  onMounted,  // Lifecycle hooks (like seasonal additions)
+} from 'vue';
+
+setup() {
+  // ref: For primitive values (single ingredients)
+  const temperature = ref(72);
+  const ph = ref(6.5);
+  
+  // reactive: For objects (mixed ingredients)
+  const soil = reactive({
+    nitrogen: 30,
+    phosphorus: 20,
+    potassium: 25,
+    organic: 45
+  });
+  
+  // computed: Processed results
+  const soilQuality = computed(() => {
+    const npk = soil.nitrogen + soil.phosphorus + soil.potassium;
+    return npk > 70 ? 'Rich' : 'Needs amendment';
+  });
+  
+  // watch: Monitor the decomposition
+  watch(temperature, (newTemp) => {
+    if (newTemp > 140) {
+      console.log('Compost is cooking nicely!');
+    }
+  });
+  
+  return { temperature, ph, soil, soilQuality };
+}
+#+END_SRC
+
+* Nutrient Mixing (Composables)
+
+Composables are pre-mixed compost blends—tested combinations you can 
+add to any garden bed. They're functions that encapsulate and reuse 
+stateful logic.
+
+** Creating Your First Compost Mix
+
+#+BEGIN_SRC javascript
+// composables/useWateringSystem.js
+import { ref, computed, watch } from 'vue';
+
+export function useWateringSystem(initialMoisture = 50) {
+  // State
+  const moistureLevel = ref(initialMoisture);
+  const lastWatered = ref(null);
+  const isAutoWatering = ref(false);
+  
+  // Computed
+  const needsWater = computed(() => moistureLevel.value < 30);
+  const waterStatus = computed(() => {
+    if (moistureLevel.value > 80) return 'Overwatered';
+    if (moistureLevel.value > 60) return 'Well watered';
+    if (moistureLevel.value > 40) return 'Moist';
+    if (moistureLevel.value > 20) return 'Dry';
+    return 'Parched';
+  });
+  
+  // Methods
+  const water = (amount = 20) => {
+    moistureLevel.value = Math.min(100, moistureLevel.value + amount);
+    lastWatered.value = new Date();
+    console.log(`Added ${amount} units of water`);
+  };
+  
+  const drain = (amount = 5) => {
+    moistureLevel.value = Math.max(0, moistureLevel.value - amount);
+  };
+  
+  const toggleAutoWater = () => {
+    isAutoWatering.value = !isAutoWatering.value;
+  };
+  
+  // Auto-watering system
+  watch(isAutoWatering, (isAuto) => {
+    if (isAuto) {
+      const interval = setInterval(() => {
+        if (needsWater.value) {
+          water(10);
+        }
+        if (!isAutoWatering.value) {
+          clearInterval(interval);
+        }
+      }, 5000);
+    }
+  });
+  
+  // Daily evaporation
+  const startEvaporation = () => {
+    setInterval(() => drain(2), 10000);
+  };
+  
+  return {
+    moistureLevel,
+    lastWatered,
+    isAutoWatering,
+    needsWater,
+    waterStatus,
+    water,
+    drain,
+    toggleAutoWater,
+    startEvaporation
+  };
+}
+#+END_SRC
+
+** Using Your Compost Mix
+
+Now use this composable in any component:
+
+#+BEGIN_SRC vue
+<template>
+  <div class="plant-container">
+    <h3>{{ plantName }}</h3>
+    <p>Water Status: {{ waterStatus }}</p>
+    <p>Moisture: {{ moistureLevel }}%</p>
+    <p v-if="needsWater" class="alert">🚨 Needs water!</p>
+    
+    <button @click="water()">Water (+20)</button>
+    <button @click="water(10)">Light water (+10)</button>
+    <button @click="toggleAutoWater">
+      {{ isAutoWatering ? 'Stop' : 'Start' }} Auto-Water
+    </button>
+    
+    <p v-if="lastWatered">
+      Last watered: {{ formatTime(lastWatered) }}
+    </p>
+  </div>
+</template>
+
+<script>
+import { ref, onMounted } from 'vue';
+import { useWateringSystem } from '@/composables/useWateringSystem';
+
+export default {
+  setup() {
+    const plantName = ref('Heritage Tomato');
+    
+    // Use the watering system composable
+    const {
+      moistureLevel,
+      lastWatered,
+      isAutoWatering,
+      needsWater,
+      waterStatus,
+      water,
+      toggleAutoWater,
+      startEvaporation
+    } = useWateringSystem(60); // Start with 60% moisture
+    
+    // Start evaporation when component mounts
+    onMounted(() => {
+      startEvaporation();
+    });
+    
+    // Local method
+    const formatTime = (date) => {
+      return date.toLocaleTimeString();
+    };
+    
+    return {
+      plantName,
+      moistureLevel,
+      lastWatered,
+      isAutoWatering,
+      needsWater,
+      waterStatus,
+      water,
+      toggleAutoWater,
+      formatTime
+    };
+  }
+}
+</script>
+#+END_SRC
+
+* Recycling Garden Waste (Reusable Logic)
+
+The real power of composting is turning waste into resources. The 
+Composition API excels at recycling logic across your application.
+
+** The Mouse Position Composter
+
+A composable that tracks mouse position—useful for garden planning tools:
+
+#+BEGIN_SRC javascript
+// composables/useMousePosition.js
+import { ref, onMounted, onUnmounted } from 'vue';
+
+export function useMousePosition() {
+  const x = ref(0);
+  const y = ref(0);
+  
+  const update = (event) => {
+    x.value = event.clientX;
+    y.value = event.clientY;
+  };
+  
+  onMounted(() => {
+    window.addEventListener('mousemove', update);
+  });
+  
+  onUnmounted(() => {
+    window.removeEventListener('mousemove', update);
+  });
+  
+  return { x, y };
+}
+#+END_SRC
+
+** The Plant Growth Tracker
+
+A composable for monitoring plant growth:
+
+#+BEGIN_SRC javascript
+// composables/usePlantGrowth.js
+import { ref, computed, watch } from 'vue';
+
+export function usePlantGrowth(plantType, initialHeight = 0) {
+  const height = ref(initialHeight);
+  const age = ref(0);
+  const growthStage = ref('seed');
+  const healthScore = ref(100);
+  
+  // Growth rates by plant type
+  const growthRates = {
+    tomato: 2,
+    sunflower: 3,
+    basil: 1.5,
+    rose: 1
+  };
+  
+  const growthRate = computed(() => {
+    return growthRates[plantType] || 1;
+  });
+  
+  const maxHeight = computed(() => {
+    const maxHeights = {
+      tomato: 60,
+      sunflower: 120,
+      basil: 30,
+      rose: 50
+    };
+    return maxHeights[plantType] || 50;
+  });
+  
+  const isMaxHeight = computed(() => {
+    return height.value >= maxHeight.value;
+  });
+  
+  const grow = () => {
+    if (!isMaxHeight.value) {
+      height.value += growthRate.value;
+      age.value++;
+      updateGrowthStage();
+    }
+  };
+  
+  const updateGrowthStage = () => {
+    const percentage = (height.value / maxHeight.value) * 100;
+    
+    if (percentage === 0) growthStage.value = 'seed';
+    else if (percentage < 20) growthStage.value = 'sprout';
+    else if (percentage < 50) growthStage.value = 'young';
+    else if (percentage < 80) growthStage.value = 'mature';
+    else growthStage.value = 'full-grown';
+  };
+  
+  const water = () => {
+    healthScore.value = Math.min(100, healthScore.value + 10);
+    // Watering boosts growth
+    if (healthScore.value > 80) {
+      grow();
+    }
+  };
+  
+  const neglect = () => {
+    healthScore.value = Math.max(0, healthScore.value - 5);
+  };
+  
+  // Auto-grow with good health
+  watch(healthScore, (health) => {
+    if (health > 90 && Math.random() > 0.5) {
+      grow();
+    }
+  });
+  
+  return {
+    height,
+    age,
+    growthStage,
+    healthScore,
+    growthRate,
+    maxHeight,
+    isMaxHeight,
+    grow,
+    water,
+    neglect
+  };
+}
+#+END_SRC
+
+** The Weather Monitor Composable
+
+#+BEGIN_SRC javascript
+// composables/useWeather.js
+import { ref, computed, watchEffect } from 'vue';
+
+export function useWeather() {
+  const temperature = ref(72);
+  const humidity = ref(50);
+  const conditions = ref('sunny');
+  const forecast = ref([]);
+  
+  const isGoodForPlanting = computed(() => {
+    return temperature.value > 60 && 
+           temperature.value < 85 && 
+           humidity.value > 40 &&
+           conditions.value !== 'stormy';
+  });
+  
+  const gardenWarnings = computed(() => {
+    const warnings = [];
+    
+    if (temperature.value < 32) warnings.push('Frost warning!');
+    if (temperature.value > 95) warnings.push('Heat stress alert!');
+    if (humidity.value < 20) warnings.push('Very dry conditions!');
+    if (conditions.value === 'stormy') warnings.push('Storm approaching!');
+    
+    return warnings;
+  });
+  
+  const updateWeather = async () => {
+    // Simulate weather API call
+    temperature.value = Math.floor(Math.random() * 40) + 50;
+    humidity.value = Math.floor(Math.random() * 60) + 20;
+    
+    const weatherTypes = ['sunny', 'cloudy', 'rainy', 'stormy', 'foggy'];
+    conditions.value = weatherTypes[Math.floor(Math.random() * weatherTypes.length)];
+  };
+  
+  const getForecast = () => {
+    forecast.value = Array.from({ length: 7 }, (_, i) => ({
+      day: i,
+      high: Math.floor(Math.random() * 30) + 60,
+      low: Math.floor(Math.random() * 20) + 40,
+      conditions: ['sunny', 'cloudy', 'rainy'][Math.floor(Math.random() * 3)]
+    }));
+  };
+  
+  // Auto-update weather every 30 seconds
+  const startWeatherMonitoring = () => {
+    updateWeather();
+    getForecast();
+    
+    setInterval(updateWeather, 30000);
+  };
+  
+  return {
+    temperature,
+    humidity,
+    conditions,
+    forecast,
+    isGoodForPlanting,
+    gardenWarnings,
+    updateWeather,
+    getForecast,
+    startWeatherMonitoring
+  };
+}
+#+END_SRC
+
+* Modern Gardening Techniques (Script Setup)
+
+Vue 3 introduced `<script setup>`—a more concise way to use the 
+Composition API. It's like switching from traditional composting to 
+a modern tumbling composter: same results, less work.
+
+** Traditional vs Modern Composting
+
+#+BEGIN_SRC vue
+<!-- Traditional Composition API -->
+<script>
+import { ref, computed } from 'vue';
+import { useWateringSystem } from './composables/useWateringSystem';
+
+export default {
+  setup() {
+    const plantName = ref('Tomato');
+    const { water, moistureLevel } = useWateringSystem();
+    
+    const displayName = computed(() => `My ${plantName.value}`);
+    
+    return {
+      plantName,
+      water,
+      moistureLevel,
+      displayName
+    };
+  }
+}
+</script>
+
+<!-- Modern Script Setup - Much cleaner! -->
+<script setup>
+import { ref, computed } from 'vue';
+import { useWateringSystem } from './composables/useWateringSystem';
+
+const plantName = ref('Tomato');
+const { water, moistureLevel } = useWateringSystem();
+
+const displayName = computed(() => `My ${plantName.value}`);
+// Everything is automatically exposed to template!
+</script>
+#+END_SRC
+
+** A Complete Garden Component with Script Setup
+
+#+BEGIN_SRC vue
+<template>
+  <div class="smart-garden">
+    <h1>🌿 Smart Garden Dashboard</h1>
+    
+    <!-- Weather Section -->
+    <section class="weather-panel">
+      <h2>Weather Conditions</h2>
+      <p>🌡️ {{ temperature }}°F | 💧 {{ humidity }}%</p>
+      <p>Conditions: {{ conditions }}</p>
+      <div v-if="gardenWarnings.length > 0" class="warnings">
+        <p v-for="warning in gardenWarnings" :key="warning">
+          ⚠️ {{ warning }}
+        </p>
+      </div>
+      <p v-else class="all-clear">
+        ✅ {{ isGoodForPlanting ? 'Perfect for gardening!' : 'Wait for better conditions' }}
+      </p>
+    </section>
+    
+    <!-- Plant Monitor -->
+    <section class="plant-monitor">
+      <h2>Plant Growth Monitor</h2>
+      <div class="plant-card" v-for="plant in plants" :key="plant.id">
+        <h3>{{ plant.name }}</h3>
+        <p>Height: {{ plant.height }}cm ({{ plant.growthStage }})</p>
+        <p>Health: {{ plant.healthScore }}%</p>
+        <progress :value="plant.height" :max="plant.maxHeight"></progress>
+        <button @click="plant.water()">💧 Water</button>
+        <button @click="plant.grow()" :disabled="plant.isMaxHeight">
+          🌱 Grow
+        </button>
+      </div>
+    </section>
+    
+    <!-- Watering System -->
+    <section class="watering-control">
+      <h2>Irrigation Control</h2>
+      <p>Main Tank: {{ waterTank }}L</p>
+      <button @click="refillTank">Refill Tank</button>
+      <button @click="waterAllPlants">Water All Plants</button>
+    </section>
+  </div>
+</template>
+
+<script setup>
+import { ref, reactive, onMounted } from 'vue';
+import { useWeather } from '@/composables/useWeather';
+import { usePlantGrowth } from '@/composables/usePlantGrowth';
+
+// Weather monitoring
+const { 
+  temperature, 
+  humidity, 
+  conditions, 
+  isGoodForPlanting,
+  gardenWarnings,
+  startWeatherMonitoring 
+} = useWeather();
+
+// Water tank management
+const waterTank = ref(100);
+
+const refillTank = () => {
+  waterTank.value = 100;
+};
+
+// Plant management
+const plants = reactive([
+  { 
+    id: 1, 
+    name: 'Cherry Tomato',
+    ...usePlantGrowth('tomato', 5)
+  },
+  { 
+    id: 2, 
+    name: 'Giant Sunflower',
+    ...usePlantGrowth('sunflower', 0)
+  },
+  { 
+    id: 3, 
+    name: 'Sweet Basil',
+    ...usePlantGrowth('basil', 3)
+  }
+]);
+
+const waterAllPlants = () => {
+  if (waterTank.value >= plants.length * 10) {
+    plants.forEach(plant => {
+      plant.water();
+      waterTank.value -= 10;
+    });
+  } else {
+    alert('Not enough water in tank!');
+  }
+};
+
+// Start monitoring when component mounts
+onMounted(() => {
+  startWeatherMonitoring();
+  console.log('Smart garden system activated!');
+});
+</script>
+
+<style scoped>
+.smart-garden {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+section {
+  background: white;
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.plant-card {
+  background: #f5f5f5;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 8px;
+}
+
+.warnings {
+  background: #fff3cd;
+  padding: 10px;
+  border-radius: 5px;
+  margin: 10px 0;
+}
+
+.all-clear {
+  color: green;
+  font-weight: bold;
+}
+
+progress {
+  width: 100%;
+  height: 20px;
+}
+
+button {
+  padding: 8px 15px;
+  margin: 5px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+</style>
+#+END_SRC
+
+* Complete Composting System Example
+
+Let's build a complete garden management system using multiple composables:
+
+#+BEGIN_SRC html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vue Garden Composting System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        #app {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #43cea2 0%, #185a9d 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .compost-dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: rgba(255,255,255,0.95);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .composables-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .composable-card {
+            background: rgba(255,255,255,0.95);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .composable-card h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #3498db;
+        }
+        
+        .metric {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .metric-label {
+            font-weight: bold;
+            color: #34495e;
+        }
+        
+        .metric-value {
+            font-size: 1.2em;
+            color: #2c3e50;
+        }
+        
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #ecf0f1;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .alert {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .success {
+            background: #27ae60;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .plant-visual {
+            font-size: 64px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .timer {
+            background: #f39c12;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            display: inline-block;
+            margin: 10px 0;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        .season-indicator {
+            display: inline-block;
+            padding: 8px 15px;
+            background: #9b59b6;
+            color: white;
+            border-radius: 20px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="compost-dashboard">
+            <div class="header">
+                <h1>♻️ Vue Garden Composting System</h1>
+                <p>Advanced garden management using the Composition API</p>
+            </div>
+            
+            <div class="composables-grid">
+                <!-- Plant Growth Composable -->
+                <div class="composable-card">
+                    <h2>🌱 Plant Growth Monitor</h2>
+                    <div class="plant-visual">{{ getPlantEmoji(growthStage) }}</div>
+                    
+                    <div class="metric">
+                        <span class="metric-label">Growth Stage:</span>
+                        <span class="metric-value">{{ growthStage }}</span>
+                    </div>
+                    
+                    <div class="metric">
+                        <span class="metric-label">Height:</span>
+                        <span class="metric-value">{{ plantHeight }}cm / {{ maxHeight }}cm</span>
+                    </div>
+                    
+                    <div class="progress-bar">
+                        <div class="progress-fill" :style="{ width: growthPercentage + '%' }">
+                            {{ Math.round(growthPercentage) }}%
+                        </div>
+                    </div>
+                    
+                    <div class="metric">
+                        <span class="metric-label">Health Score:</span>
+                        <span class="metric-value">{{ healthScore }}%</span>
+                    </div>
+                    
+                    <div class="controls">
+                        <button @click="growPlant" :disabled="isMaxHeight">Grow</button>
+                        <button @click="waterPlant">Water (+10 Health)</button>
+                        <button @click="neglectPlant">Neglect (-5 Health)</button>
+                    </div>
+                </div>
+                
+                <!-- Timer Composable -->
+                <div class="composable-card">
+                    <h2>⏰ Garden Timer</h2>
+                    
+                    <div class="metric">
+                        <span class="metric-label">Elapsed Time:</span>
+                        <span class="metric-value">{{ formattedTime }}</span>
+                    </div>
+                    
+                    <div class="metric">
+                        <span class="metric-label">Status:</span>
+                        <span class="metric-value">{{ isRunning ? 'Running' : 'Stopped' }}</span>
+                    </div>
+                    
+                    <div v-if="lastLap" class="metric">
+                        <span class="metric-label">Last Lap:</span>
+                        <span class="metric-value">{{ lastLap }}s</span>
+                    </div>
+                    
+                    <div class="controls">
+                        <button @click="startTimer" v-if="!isRunning">Start</button>
+                        <button @click="pauseTimer" v-else>Pause</button>
+                        <button @click="resetTimer">Reset</button>
+                        <button @click="lapTimer">Lap</button>
+                    </div>
+                    
+                    <div class="timer" v-if="isRunning">
+                        ⏱️ Timer is running...
+                    </div>
+                </div>
+                
+                <!-- Storage Composable -->
+                <div class="composable-card">
+                    <h2>💾 Garden Memory</h2>
+                    
+                    <div class="metric">
+                        <span class="metric-label">Saved Gardens:</span>
+                        <span class="metric-value">{{ savedGardens.length }}</span>
+                    </div>
+                    
+                    <input v-model="gardenName" placeholder="Garden name..." style="width: 100%; padding: 10px; margin: 10px 0;">
+                    
+                    <div class="controls">
+                        <button @click="saveCurrentGarden">Save Garden</button>
+                        <button @click="clearAllGardens">Clear All</button>
+                    </div>
+                    
+                    <div v-for="garden in savedGardens" :key="garden.id" class="metric">
+                        <span>{{ garden.name }}</span>
+                        <button @click="loadGarden(garden.id)">Load</button>
+                    </div>
+                </div>
+                
+                <!-- Keyboard Composable -->
+                <div class="composable-card">
+                    <h2>⌨️ Keyboard Controls</h2>
+                    
+                    <div class="metric">
+                        <span class="metric-label">Last Key:</span>
+                        <span class="metric-value">{{ lastKey || 'None' }}</span>
+                    </div>
+                    
+                    <div class="metric">
+                        <span class="metric-label">Combo:</span>
+                        <span class="metric-value">{{ keyCombo }}</span>
+                    </div>
+                    
+                    <div class="success" v-if="lastKey">
+                        Press keys to control the garden:
+                        <ul>
+                            <li>W - Water plants</li>
+                            <li>G - Grow plants</li>
+                            <li>S - Save garden</li>
+                            <li>R - Reset timer</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Fetch Composable -->
+                <div class="composable-card">
+                    <h2>🌐 Weather Data</h2>
+                    
+                    <div v-if="loading" class="metric">
+                        Loading weather data...
+                    </div>
+                    
+                    <div v-else-if="error" class="alert">
+                        Error: {{ error }}
+                    </div>
+                    
+                    <div v-else-if="weatherData">
+                        <div class="metric">
+                            <span class="metric-label">Temperature:</span>
+                            <span class="metric-value">{{ weatherData.temp }}°F</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Conditions:</span>
+                            <span class="metric-value">{{ weatherData.conditions }}</span>
+                        </div>
+                    </div>
+                    
+                    <button @click="fetchWeather">Refresh Weather</button>
+                </div>
+                
+                <!-- Season Cycle Composable -->
+                <div class="composable-card">
+                    <h2>🍂 Season Cycle</h2>
+                    
+                    <div class="plant-visual">{{ getSeasonEmoji(currentSeason) }}</div>
+                    
+                    <div class="metric">
+                        <span class="metric-label">Current Season:</span>
+                        <span class="metric-value">{{ currentSeason }}</span>
+                    </div>
+                    
+                    <div class="metric">
+                        <span class="metric-label">Days in Season:</span>
+                        <span class="metric-value">{{ daysInSeason }}</span>
+                    </div>
+                    
+                    <div class="controls">
+                        <button @click="nextSeason">Next Season</button>
+                        <button @click="toggleAutoCycle">
+                            {{ autoCycle ? 'Stop' : 'Start' }} Auto Cycle
+                        </button>
+                    </div>
+                    
+                    <div class="success" v-if="seasonTip">
+                        💡 Tip: {{ seasonTip }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        const { createApp, ref, reactive, computed, watch, onMounted, onUnmounted } = Vue;
+        
+        // Composable: Plant Growth
+        function usePlantGrowth(type = 'tomato') {
+            const plantHeight = ref(10);
+            const growthStage = ref('seed');
+            const healthScore = ref(100);
+            
+            const maxHeight = computed(() => {
+                const heights = { tomato: 100, sunflower: 200, basil: 50 };
+                return heights[type] || 100;
+            });
+            
+            const isMaxHeight = computed(() => plantHeight.value >= maxHeight.value);
+            
+            const growthPercentage = computed(() => 
+                (plantHeight.value / maxHeight.value) * 100
+            );
+            
+            const updateStage = () => {
+                const percent = growthPercentage.value;
+                if (percent < 20) growthStage.value = 'seed';
+                else if (percent < 40) growthStage.value = 'sprout';
+                else if (percent < 60) growthStage.value = 'young';
+                else if (percent < 80) growthStage.value = 'mature';
+                else growthStage.value = 'full-grown';
+            };
+            
+            const growPlant = () => {
+                if (!isMaxHeight.value) {
+                    plantHeight.value = Math.min(maxHeight.value, plantHeight.value + 10);
+                    updateStage();
+                }
+            };
+            
+            const waterPlant = () => {
+                healthScore.value = Math.min(100, healthScore.value + 10);
+            };
+            
+            const neglectPlant = () => {
+                healthScore.value = Math.max(0, healthScore.value - 5);
+            };
+            
+            return {
+                plantHeight,
+                growthStage,
+                healthScore,
+                maxHeight,
+                isMaxHeight,
+                growthPercentage,
+                growPlant,
+                waterPlant,
+                neglectPlant
+            };
+        }
+        
+        // Composable: Timer
+        function useTimer() {
+            const seconds = ref(0);
+            const isRunning = ref(false);
+            const lastLap = ref(null);
+            let interval = null;
+            
+            const formattedTime = computed(() => {
+                const mins = Math.floor(seconds.value / 60);
+                const secs = seconds.value % 60;
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            });
+            
+            const startTimer = () => {
+                if (!isRunning.value) {
+                    isRunning.value = true;
+                    interval = setInterval(() => {
+                        seconds.value++;
+                    }, 1000);
+                }
+            };
+            
+            const pauseTimer = () => {
+                isRunning.value = false;
+                if (interval) {
+                    clearInterval(interval);
+                    interval = null;
+                }
+            };
+            
+            const resetTimer = () => {
+                pauseTimer();
+                seconds.value = 0;
+                lastLap.value = null;
+            };
+            
+            const lapTimer = () => {
+                lastLap.value = seconds.value;
+            };
+            
+            onUnmounted(() => {
+                if (interval) clearInterval(interval);
+            });
+            
+            return {
+                seconds,
+                isRunning,
+                formattedTime,
+                lastLap,
+                startTimer,
+                pauseTimer,
+                resetTimer,
+                lapTimer
+            };
+        }
+        
+        // Composable: Local Storage
+        function useLocalStorage(key, defaultValue) {
+            const storedValue = localStorage.getItem(key);
+            const data = ref(storedValue ? JSON.parse(storedValue) : defaultValue);
+            
+            watch(data, (newValue) => {
+                localStorage.setItem(key, JSON.stringify(newValue));
+            }, { deep: true });
+            
+            return data;
+        }
+        
+        // Composable: Keyboard
+        function useKeyboard() {
+            const lastKey = ref(null);
+            const keysPressed = ref(new Set());
+            
+            const keyCombo = computed(() => {
+                return Array.from(keysPressed.value).join('+') || 'None';
+            });
+            
+            const handleKeyDown = (e) => {
+                lastKey.value = e.key;
+                keysPressed.value.add(e.key);
+            };
+            
+            const handleKeyUp = (e) => {
+                keysPressed.value.delete(e.key);
+            };
+            
+            onMounted(() => {
+                window.addEventListener('keydown', handleKeyDown);
+                window.addEventListener('keyup', handleKeyUp);
+            });
+            
+            onUnmounted(() => {
+                window.removeEventListener('keydown', handleKeyDown);
+                window.removeEventListener('keyup', handleKeyUp);
+            });
+            
+            return { lastKey, keyCombo };
+        }
+        
+        // Composable: Fetch
+        function useFetch(url) {
+            const data = ref(null);
+            const loading = ref(false);
+            const error = ref(null);
+            
+            const fetchData = async () => {
+                loading.value = true;
+                error.value = null;
+                
+                try {
+                    // Simulate API call
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    data.value = {
+                        temp: Math.floor(Math.random() * 30) + 60,
+                        conditions: ['Sunny', 'Cloudy', 'Rainy'][Math.floor(Math.random() * 3)]
+                    };
+                } catch (err) {
+                    error.value = err.message;
+                } finally {
+                    loading.value = false;
+                }
+            };
+            
+            return { data, loading, error, fetchData };
+        }
+        
+        // Composable: Season Cycle
+        function useSeasonCycle() {
+            const seasons = ['Spring', 'Summer', 'Fall', 'Winter'];
+            const currentSeasonIndex = ref(0);
+            const daysInSeason = ref(0);
+            const autoCycle = ref(false);
+            
+            const currentSeason = computed(() => seasons[currentSeasonIndex.value]);
+            
+            const seasonTip = computed(() => {
+                const tips = {
+                    'Spring': 'Perfect time to plant new seeds!',
+                    'Summer': 'Water frequently during hot days.',
+                    'Fall': 'Harvest your vegetables and prepare for winter.',
+                    'Winter': 'Plan next year\'s garden layout.'
+                };
+                return tips[currentSeason.value];
+            });
+            
+            const nextSeason = () => {
+                currentSeasonIndex.value = (currentSeasonIndex.value + 1) % 4;
+                daysInSeason.value = 0;
+            };
+            
+            const toggleAutoCycle = () => {
+                autoCycle.value = !autoCycle.value;
+            };
+            
+            watch(autoCycle, (isAuto) => {
+                if (isAuto) {
+                    const interval = setInterval(() => {
+                        daysInSeason.value++;
+                        if (daysInSeason.value >= 90) {
+                            nextSeason();
+                        }
+                        if (!autoCycle.value) {
+                            clearInterval(interval);
+                        }
+                    }, 100); // Fast for demo
+                }
+            });
+            
+            return {
+                currentSeason,
+                daysInSeason,
+                autoCycle,
+                seasonTip,
+                nextSeason,
+                toggleAutoCycle
+            };
+        }
+        
+        // Main App
+        createApp({
+            setup() {
+                // Use all composables
+                const {
+                    plantHeight,
+                    growthStage,
+                    healthScore,
+                    maxHeight,
+                    isMaxHeight,
+                    growthPercentage,
+                    growPlant,
+                    waterPlant,
+                    neglectPlant
+                } = usePlantGrowth('tomato');
+                
+                const {
+                    seconds,
+                    isRunning,
+                    formattedTime,
+                    lastLap,
+                    startTimer,
+                    pauseTimer,
+                    resetTimer,
+                    lapTimer
+                } = useTimer();
+                
+                const savedGardens = useLocalStorage('gardens', []);
+                const gardenName = ref('');
+                
+                const { lastKey, keyCombo } = useKeyboard();
+                
+                const { 
+                    data: weatherData, 
+                    loading, 
+                    error, 
+                    fetchData: fetchWeather 
+                } = useFetch('/api/weather');
+                
+                const {
+                    currentSeason,
+                    daysInSeason,
+                    autoCycle,
+                    seasonTip,
+                    nextSeason,
+                    toggleAutoCycle
+                } = useSeasonCycle();
+                
+                // Local methods
+                const saveCurrentGarden = () => {
+                    if (gardenName.value) {
+                        savedGardens.value.push({
+                            id: Date.now(),
+                            name: gardenName.value,
+                            height: plantHeight.value,
+                            health: healthScore.value,
+                            season: currentSeason.value
+                        });
+                        gardenName.value = '';
+                    }
+                };
+                
+                const loadGarden = (id) => {
+                    const garden = savedGardens.value.find(g => g.id === id);
+                    if (garden) {
+                        plantHeight.value = garden.height;
+                        healthScore.value = garden.health;
+                    }
+                };
+                
+                const clearAllGardens = () => {
+                    savedGardens.value = [];
+                };
+                
+                const getPlantEmoji = (stage) => {
+                    const emojis = {
+                        'seed': '🌰',
+                        'sprout': '🌱',
+                        'young': '🌿',
+                        'mature': '🌾',
+                        'full-grown': '🌳'
+                    };
+                    return emojis[stage] || '🌱';
+                };
+                
+                const getSeasonEmoji = (season) => {
+                    const emojis = {
+                        'Spring': '🌸',
+                        'Summer': '☀️',
+                        'Fall': '🍂',
+                        'Winter': '❄️'
+                    };
+                    return emojis[season] || '🌍';
+                };
+                
+                // Keyboard shortcuts
+                watch(lastKey, (key) => {
+                    switch(key?.toLowerCase()) {
+                        case 'w': waterPlant(); break;
+                        case 'g': growPlant(); break;
+                        case 's': saveCurrentGarden(); break;
+                        case 'r': resetTimer(); break;
+                    }
+                });
+                
+                // Initial fetch
+                onMounted(() => {
+                    fetchWeather();
+                });
+                
+                return {
+                    // Plant growth
+                    plantHeight,
+                    growthStage,
+                    healthScore,
+                    maxHeight,
+                    isMaxHeight,
+                    growthPercentage,
+                    growPlant,
+                    waterPlant,
+                    neglectPlant,
+                    
+                    // Timer
+                    isRunning,
+                    formattedTime,
+                    lastLap,
+                    startTimer,
+                    pauseTimer,
+                    resetTimer,
+                    lapTimer,
+                    
+                    // Storage
+                    savedGardens,
+                    gardenName,
+                    saveCurrentGarden,
+                    loadGarden,
+                    clearAllGardens,
+                    
+                    // Keyboard
+                    lastKey,
+                    keyCombo,
+                    
+                    // Weather
+                    weatherData,
+                    loading,
+                    error,
+                    fetchWeather,
+                    
+                    // Seasons
+                    currentSeason,
+                    daysInSeason,
+                    autoCycle,
+                    seasonTip,
+                    nextSeason,
+                    toggleAutoCycle,
+                    
+                    // Helpers
+                    getPlantEmoji,
+                    getSeasonEmoji
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
+#+END_SRC
+
+* Exercises: Master Composting
+
+** Exercise 1: The Pest Control Composable
+Create a composable that:
+- Tracks different pest types
+- Implements organic pest control methods
+- Monitors pest population over time
+- Provides alerts when thresholds are exceeded
+
+** Exercise 2: The Harvest Tracker Composable
+Build a composable for:
+- Recording harvest dates and amounts
+- Calculating yield per plant
+- Tracking best performing varieties
+- Generating harvest reports
+
+** Exercise 3: The Garden Planning Composable
+Design a composable that:
+- Manages garden bed layouts
+- Tracks crop rotation
+- Suggests companion plants
+- Calculates space requirements
+
+** Exercise 4: The Composable Library
+Create a collection of mini-composables:
+- `useDebounce` - Debounce user input
+- `useThrottle` - Throttle function calls
+- `useIntersectionObserver` - Detect when plants are visible
+- `useMediaQuery` - Responsive garden layouts
+
+* Closing Thoughts
+
+You've mastered the art of composting—taking pieces of logic and 
+transforming them into rich, reusable nutrients for your entire garden. 
+The Composition API isn't just a new syntax; it's a new way of thinking 
+about code organization.
+
+You've learned:
+- The setup function as your compost bin
+- Creating reusable composables
+- Modern script setup syntax
+- Combining multiple composables
+- Building complex systems from simple parts
+
+Your garden now has a sustainable ecosystem. Logic isn't scattered and 
+duplicated—it's composted into rich, reusable patterns that make 
+everything grow stronger.
+
+Next, we'll explore the greenhouse—build tools and deployment—where we 
+control the environment to help our garden thrive in any climate.
+
+For now, appreciate the cycle: code becomes compost, compost enriches 
+components, components grow into applications. This is sustainable 
+development.
+
+---
+
+/The compost heap steams gently in the morning sun, breaking down/
+/yesterday's code into tomorrow's patterns. Your garden has learned/
+/to feed itself./

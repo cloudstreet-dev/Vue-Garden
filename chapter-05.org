@@ -1,0 +1,1263 @@
+#+TITLE: Chapter 5: The Tool Shed
+#+SUBTITLE: State Management - Organizing Your Garden's Central Storage
+
+* Chapter 5: The Tool Shed (State Management)
+
+Every gardener needs a tool shed—a central place where all the important 
+equipment lives. Not scattered across the garden, not duplicated in every 
+flower bed, but organized in one accessible location. When you need the 
+wheelbarrow, you know exactly where to find it. When you're done with 
+the rake, you know where it belongs.
+
+In Vue applications, state management is your tool shed. It's where you 
+store data that multiple components need to access, modify, and share. 
+Without it, you're carrying copies of tools everywhere, losing track of 
+which version is current, and exhausting yourself with unnecessary trips.
+
+Let's organize our shed.
+
+* Why You Need a Tool Shed (The State Management Problem)
+
+Imagine gardening without a tool shed:
+
+- You leave a trowel by the tomatoes, another by the roses
+- You can't remember which watering can has the fertilizer mix
+- You buy duplicate tools because you can't find the ones you have
+- Different gardeners (components) don't know what tools others are using
+
+This is your Vue app without state management—data scattered across 
+components, multiple versions of truth, and constant confusion about 
+what's current.
+
+** The Problem Illustrated
+
+#+BEGIN_SRC javascript
+// Without state management - chaos in the garden
+const GardenBed = {
+    data() {
+        return {
+            // Each bed tracks its own tool inventory
+            tools: ['spade', 'fork'],
+            waterLevel: 50,
+            lastWatered: null
+        }
+    }
+}
+
+const Greenhouse = {
+    data() {
+        return {
+            // Greenhouse has its own tracking
+            tools: ['sprayer', 'thermometer'],
+            waterLevel: 75,  // Different from garden bed!
+            temperature: 72
+        }
+    }
+}
+
+const Shed = {
+    data() {
+        return {
+            // Shed doesn't know what's actually in use
+            availableTools: ['rake', 'hoe', 'spade'],  // Duplicate spade!
+        }
+    }
+}
+#+END_SRC
+
+Each component maintains its own truth. Chaos ensues. This is why we 
+need centralized state management.
+
+* The Community Shed (Introduction to Pinia)
+
+Pinia is Vue's official state management solution—think of it as the 
+community tool shed where everything is organized, labeled, and accessible 
+to all gardeners.
+
+** Installing Your Tool Shed
+
+#+BEGIN_SRC bash
+# Install Pinia - your new tool shed
+npm install pinia
+#+END_SRC
+
+** Setting Up the Shed Structure
+
+#+BEGIN_SRC javascript
+// main.js - Installing the tool shed
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
+import App from './App.vue';
+
+const app = createApp(App);
+
+// Create the tool shed
+const pinia = createPinia();
+
+// Make it available to all gardeners
+app.use(pinia);
+
+app.mount('#app');
+#+END_SRC
+
+** Your First Tool Organization System
+
+#+BEGIN_SRC javascript
+// stores/garden.js - Organizing garden tools and supplies
+import { defineStore } from 'pinia';
+
+export const useGardenStore = defineStore('garden', {
+    // The tool inventory
+    state: () => ({
+        tools: [
+            { id: 1, name: 'Spade', location: 'in-use', user: 'TomatoBed' },
+            { id: 2, name: 'Rake', location: 'shed', user: null },
+            { id: 3, name: 'Watering Can', location: 'in-use', user: 'Greenhouse' }
+        ],
+        supplies: {
+            water: 1000,      // gallons
+            compost: 50,      // bags
+            seeds: 25,        // packets
+            fertilizer: 10    // pounds
+        },
+        plants: [],
+        currentSeason: 'Spring',
+        gardenHealth: 85
+    }),
+    
+    // Tool calculations and status checks
+    getters: {
+        availableTools: (state) => {
+            return state.tools.filter(tool => tool.location === 'shed');
+        },
+        
+        toolsInUse: (state) => {
+            return state.tools.filter(tool => tool.location === 'in-use');
+        },
+        
+        lowSupplies: (state) => {
+            return Object.entries(state.supplies)
+                .filter(([item, amount]) => amount < 20)
+                .map(([item]) => item);
+        },
+        
+        totalPlants: (state) => state.plants.length,
+        
+        plantsByType: (state) => {
+            return state.plants.reduce((acc, plant) => {
+                acc[plant.type] = (acc[plant.type] || 0) + 1;
+                return acc;
+            }, {});
+        }
+    },
+    
+    // Tool shed operations
+    actions: {
+        borrowTool(toolId, borrower) {
+            const tool = this.tools.find(t => t.id === toolId);
+            if (tool && tool.location === 'shed') {
+                tool.location = 'in-use';
+                tool.user = borrower;
+                console.log(`${borrower} borrowed ${tool.name}`);
+                return true;
+            }
+            return false;
+        },
+        
+        returnTool(toolId) {
+            const tool = this.tools.find(t => t.id === toolId);
+            if (tool && tool.location === 'in-use') {
+                const previousUser = tool.user;
+                tool.location = 'shed';
+                tool.user = null;
+                console.log(`${tool.name} returned by ${previousUser}`);
+                return true;
+            }
+            return false;
+        },
+        
+        useSupplies(type, amount) {
+            if (this.supplies[type] >= amount) {
+                this.supplies[type] -= amount;
+                return true;
+            }
+            console.warn(`Not enough ${type}! Only ${this.supplies[type]} available.`);
+            return false;
+        },
+        
+        restockSupplies(type, amount) {
+            this.supplies[type] += amount;
+            console.log(`Restocked ${amount} ${type}. New total: ${this.supplies[type]}`);
+        },
+        
+        plantSeed(plantData) {
+            if (this.useSupplies('seeds', 1)) {
+                this.plants.push({
+                    id: Date.now(),
+                    planted: new Date(),
+                    ...plantData
+                });
+                return true;
+            }
+            return false;
+        },
+        
+        changeSeason(newSeason) {
+            this.currentSeason = newSeason;
+            // Season changes affect garden health
+            if (newSeason === 'Winter') {
+                this.gardenHealth -= 10;
+            } else if (newSeason === 'Spring') {
+                this.gardenHealth += 15;
+            }
+        }
+    }
+});
+#+END_SRC
+
+** Using the Tool Shed in Your Garden
+
+#+BEGIN_SRC vue
+<!-- GardenBed.vue - A component using the tool shed -->
+<template>
+  <div class="garden-bed">
+    <h2>🌱 Garden Bed Management</h2>
+    
+    <!-- Tool Status -->
+    <div class="tool-status">
+      <h3>Available Tools in Shed:</h3>
+      <div v-if="availableTools.length === 0">
+        All tools are in use!
+      </div>
+      <div v-else>
+        <button 
+          v-for="tool in availableTools" 
+          :key="tool.id"
+          @click="borrowTool(tool.id)">
+          Borrow {{ tool.name }}
+        </button>
+      </div>
+    </div>
+    
+    <!-- My Borrowed Tools -->
+    <div class="my-tools">
+      <h3>My Tools:</h3>
+      <div v-for="tool in myTools" :key="tool.id">
+        {{ tool.name }}
+        <button @click="returnTool(tool.id)">Return</button>
+      </div>
+    </div>
+    
+    <!-- Supply Usage -->
+    <div class="supplies">
+      <h3>Garden Supplies:</h3>
+      <p>💧 Water: {{ supplies.water }} gallons</p>
+      <p>🌱 Seeds: {{ supplies.seeds }} packets</p>
+      <button @click="waterPlants">Water Plants (-10 gallons)</button>
+      <button @click="plantNewSeed">Plant Seed</button>
+    </div>
+    
+    <!-- Low Supply Warnings -->
+    <div v-if="lowSupplies.length > 0" class="warning">
+      ⚠️ Low supplies: {{ lowSupplies.join(', ') }}
+    </div>
+  </div>
+</template>
+
+<script>
+import { useGardenStore } from '@/stores/garden';
+import { computed } from 'vue';
+
+export default {
+  name: 'GardenBed',
+  
+  setup() {
+    const gardenStore = useGardenStore();
+    const componentName = 'GardenBed';
+    
+    // Computed properties from store
+    const availableTools = computed(() => gardenStore.availableTools);
+    const myTools = computed(() => 
+      gardenStore.toolsInUse.filter(t => t.user === componentName)
+    );
+    const supplies = computed(() => gardenStore.supplies);
+    const lowSupplies = computed(() => gardenStore.lowSupplies);
+    
+    // Methods using store actions
+    const borrowTool = (toolId) => {
+      if (gardenStore.borrowTool(toolId, componentName)) {
+        console.log('Tool borrowed successfully!');
+      } else {
+        alert('Tool not available!');
+      }
+    };
+    
+    const returnTool = (toolId) => {
+      gardenStore.returnTool(toolId);
+    };
+    
+    const waterPlants = () => {
+      if (gardenStore.useSupplies('water', 10)) {
+        console.log('Plants watered!');
+      } else {
+        alert('Not enough water!');
+      }
+    };
+    
+    const plantNewSeed = () => {
+      const planted = gardenStore.plantSeed({
+        name: 'Tomato',
+        type: 'vegetable',
+        location: componentName
+      });
+      
+      if (planted) {
+        console.log('Seed planted!');
+      } else {
+        alert('No seeds available!');
+      }
+    };
+    
+    return {
+      availableTools,
+      myTools,
+      supplies,
+      lowSupplies,
+      borrowTool,
+      returnTool,
+      waterPlants,
+      plantNewSeed
+    };
+  }
+}
+</script>
+#+END_SRC
+
+* Tool Organization Patterns
+
+Good tool sheds have organization systems. Here are patterns for managing 
+your application state:
+
+** The Modular Shed System
+
+Organize your store into logical sections:
+
+#+BEGIN_SRC javascript
+// stores/tools.js - Tool management
+export const useToolStore = defineStore('tools', {
+    state: () => ({
+        inventory: [],
+        maintenance: []
+    }),
+    // Tool-specific getters and actions
+});
+
+// stores/plants.js - Plant management
+export const usePlantStore = defineStore('plants', {
+    state: () => ({
+        planted: [],
+        nursery: [],
+        harvested: []
+    }),
+    // Plant-specific getters and actions
+});
+
+// stores/weather.js - Weather tracking
+export const useWeatherStore = defineStore('weather', {
+    state: () => ({
+        current: { temp: 72, humidity: 50 },
+        forecast: [],
+        alerts: []
+    }),
+    // Weather-specific getters and actions
+});
+#+END_SRC
+
+** The Inventory Tracking Pattern
+
+Keep detailed records of everything:
+
+#+BEGIN_SRC javascript
+export const useInventoryStore = defineStore('inventory', {
+    state: () => ({
+        items: new Map(),
+        transactions: [],
+        categories: ['tools', 'supplies', 'plants', 'decorations']
+    }),
+    
+    getters: {
+        itemsByCategory: (state) => {
+            return (category) => {
+                return Array.from(state.items.values())
+                    .filter(item => item.category === category);
+            };
+        },
+        
+        transactionHistory: (state) => {
+            return state.transactions.slice(-50); // Last 50 transactions
+        },
+        
+        lowStockItems: (state) => {
+            return Array.from(state.items.values())
+                .filter(item => item.quantity < item.minStock);
+        }
+    },
+    
+    actions: {
+        addItem(item) {
+            this.items.set(item.id, {
+                ...item,
+                addedAt: new Date(),
+                lastModified: new Date()
+            });
+            this.logTransaction('add', item);
+        },
+        
+        updateQuantity(itemId, change, reason) {
+            const item = this.items.get(itemId);
+            if (item) {
+                item.quantity += change;
+                item.lastModified = new Date();
+                this.logTransaction('quantity', { itemId, change, reason });
+            }
+        },
+        
+        logTransaction(type, data) {
+            this.transactions.push({
+                type,
+                data,
+                timestamp: new Date(),
+                id: Date.now()
+            });
+        }
+    }
+});
+#+END_SRC
+
+** The Sharing Pattern
+
+Some tools need to be shared between gardeners:
+
+#+BEGIN_SRC javascript
+export const useSharedResourceStore = defineStore('sharedResources', {
+    state: () => ({
+        resources: {},
+        reservations: [],
+        waitlist: {}
+    }),
+    
+    actions: {
+        async requestResource(resourceId, requester, duration) {
+            const resource = this.resources[resourceId];
+            
+            if (!resource) {
+                throw new Error(`Resource ${resourceId} not found`);
+            }
+            
+            if (resource.available) {
+                // Resource is available, reserve it
+                resource.available = false;
+                resource.currentUser = requester;
+                resource.returnTime = Date.now() + duration;
+                
+                this.reservations.push({
+                    resourceId,
+                    requester,
+                    startTime: Date.now(),
+                    duration
+                });
+                
+                // Auto-return after duration
+                setTimeout(() => {
+                    this.returnResource(resourceId);
+                }, duration);
+                
+                return { success: true };
+            } else {
+                // Add to waitlist
+                if (!this.waitlist[resourceId]) {
+                    this.waitlist[resourceId] = [];
+                }
+                
+                this.waitlist[resourceId].push({
+                    requester,
+                    requestTime: Date.now()
+                });
+                
+                return { 
+                    success: false, 
+                    position: this.waitlist[resourceId].length 
+                };
+            }
+        },
+        
+        returnResource(resourceId) {
+            const resource = this.resources[resourceId];
+            
+            if (resource) {
+                resource.available = true;
+                resource.currentUser = null;
+                resource.returnTime = null;
+                
+                // Check waitlist
+                if (this.waitlist[resourceId]?.length > 0) {
+                    const next = this.waitlist[resourceId].shift();
+                    // Notify next user (in real app, would trigger notification)
+                    console.log(`${next.requester} is next for ${resourceId}`);
+                }
+            }
+        }
+    }
+});
+#+END_SRC
+
+* Complete Tool Shed System
+
+Let's build a complete garden management system with Pinia:
+
+#+BEGIN_SRC html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Garden Tool Shed Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        #app {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to bottom, #a8e6cf, #dcedc1);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .panel h2 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #4caf50;
+            padding-bottom: 10px;
+        }
+        
+        .tool-item, .supply-item, .plant-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f5f5f5;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .tool-item.in-use {
+            background: #ffecb3;
+        }
+        
+        .tool-item.available {
+            background: #c8e6c9;
+        }
+        
+        .supply-item.low {
+            background: #ffcdd2;
+        }
+        
+        button {
+            padding: 8px 15px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 2px;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .stat-card {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2e7d32;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .alert {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        input, select {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+        }
+        
+        .form-group {
+            margin: 10px 0;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="header">
+            <h1>🏡 Garden Tool Shed Management System</h1>
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value">{{ totalTools }}</div>
+                    <div class="stat-label">Total Tools</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ availableToolsCount }}</div>
+                    <div class="stat-label">Available</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ totalPlants }}</div>
+                    <div class="stat-label">Plants</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ gardenHealth }}%</div>
+                    <div class="stat-label">Garden Health</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard">
+            <!-- Tool Management Panel -->
+            <div class="panel">
+                <h2>🔧 Tool Management</h2>
+                
+                <button @click="showAddTool = true">+ Add New Tool</button>
+                
+                <div style="margin-top: 15px;">
+                    <h3>Available Tools:</h3>
+                    <div v-for="tool in availableTools" :key="tool.id" 
+                         class="tool-item available">
+                        <span>{{ tool.name }}</span>
+                        <button @click="borrowTool(tool.id)">Borrow</button>
+                    </div>
+                    <div v-if="availableTools.length === 0">
+                        <p>No tools available</p>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <h3>Tools In Use:</h3>
+                    <div v-for="tool in toolsInUse" :key="tool.id" 
+                         class="tool-item in-use">
+                        <span>{{ tool.name }} ({{ tool.user }})</span>
+                        <button @click="returnTool(tool.id)">Return</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Supply Management Panel -->
+            <div class="panel">
+                <h2>📦 Supplies</h2>
+                
+                <div v-for="(amount, supply) in supplies" :key="supply" 
+                     class="supply-item" 
+                     :class="{ low: amount < 20 }">
+                    <span>{{ capitalize(supply) }}: {{ amount }}</span>
+                    <div>
+                        <button @click="useSupply(supply, 5)">Use 5</button>
+                        <button @click="restockSupply(supply, 10)">+10</button>
+                    </div>
+                </div>
+                
+                <div v-if="lowSupplies.length > 0" class="alert">
+                    ⚠️ Low supplies: {{ lowSupplies.join(', ') }}
+                </div>
+            </div>
+            
+            <!-- Plant Management Panel -->
+            <div class="panel">
+                <h2>🌱 Plant Registry</h2>
+                
+                <button @click="showPlantModal = true">+ Plant New Seed</button>
+                
+                <div style="margin-top: 15px;">
+                    <div v-for="plant in recentPlants" :key="plant.id" 
+                         class="plant-item">
+                        <div>
+                            <strong>{{ plant.name }}</strong><br>
+                            <small>{{ plant.type }} - {{ formatDate(plant.planted) }}</small>
+                        </div>
+                        <button @click="harvestPlant(plant.id)">Harvest</button>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <h4>Plant Statistics:</h4>
+                    <div v-for="(count, type) in plantsByType" :key="type">
+                        {{ capitalize(type) }}: {{ count }}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Season & Weather Panel -->
+            <div class="panel">
+                <h2>🌤️ Season & Weather</h2>
+                
+                <div class="stat-card">
+                    <div class="stat-value">{{ currentSeason }}</div>
+                    <div class="stat-label">Current Season</div>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <button @click="changeSeason('Spring')">🌸 Spring</button>
+                    <button @click="changeSeason('Summer')">☀️ Summer</button>
+                    <button @click="changeSeason('Fall')">🍂 Fall</button>
+                    <button @click="changeSeason('Winter')">❄️ Winter</button>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <h4>Seasonal Tasks:</h4>
+                    <ul>
+                        <li v-for="task in seasonalTasks" :key="task">
+                            {{ task }}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Add Tool Modal -->
+        <div v-if="showAddTool" class="modal" @click="showAddTool = false">
+            <div class="modal-content" @click.stop>
+                <h2>Add New Tool</h2>
+                <div class="form-group">
+                    <label>Tool Name:</label>
+                    <input v-model="newTool.name" placeholder="Enter tool name">
+                </div>
+                <div class="form-group">
+                    <label>Category:</label>
+                    <select v-model="newTool.category">
+                        <option>Hand Tool</option>
+                        <option>Power Tool</option>
+                        <option>Watering</option>
+                        <option>Planting</option>
+                    </select>
+                </div>
+                <button @click="addNewTool">Add Tool</button>
+                <button @click="showAddTool = false">Cancel</button>
+            </div>
+        </div>
+        
+        <!-- Plant Seed Modal -->
+        <div v-if="showPlantModal" class="modal" @click="showPlantModal = false">
+            <div class="modal-content" @click.stop>
+                <h2>Plant New Seed</h2>
+                <div class="form-group">
+                    <label>Plant Name:</label>
+                    <input v-model="newPlant.name" placeholder="e.g., Tomato">
+                </div>
+                <div class="form-group">
+                    <label>Type:</label>
+                    <select v-model="newPlant.type">
+                        <option>vegetable</option>
+                        <option>flower</option>
+                        <option>herb</option>
+                        <option>fruit</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Location:</label>
+                    <input v-model="newPlant.location" placeholder="e.g., North Bed">
+                </div>
+                <button @click="plantNewSeed">Plant Seed</button>
+                <button @click="showPlantModal = false">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/pinia/dist/pinia.iife.js"></script>
+    <script>
+        const { createApp } = Vue;
+        const { createPinia, defineStore } = Pinia;
+        
+        // Define the garden store
+        const useGardenStore = defineStore('garden', {
+            state: () => ({
+                tools: [
+                    { id: 1, name: 'Spade', category: 'Hand Tool', location: 'shed', user: null },
+                    { id: 2, name: 'Rake', category: 'Hand Tool', location: 'shed', user: null },
+                    { id: 3, name: 'Watering Can', category: 'Watering', location: 'in-use', user: 'John' },
+                    { id: 4, name: 'Pruning Shears', category: 'Hand Tool', location: 'shed', user: null }
+                ],
+                supplies: {
+                    water: 100,
+                    compost: 15,
+                    seeds: 8,
+                    fertilizer: 25
+                },
+                plants: [
+                    { id: 1, name: 'Tomato', type: 'vegetable', planted: new Date('2024-03-15'), location: 'South Bed' },
+                    { id: 2, name: 'Rose', type: 'flower', planted: new Date('2024-03-10'), location: 'Front Garden' }
+                ],
+                currentSeason: 'Spring',
+                gardenHealth: 85
+            }),
+            
+            getters: {
+                availableTools: (state) => {
+                    return state.tools.filter(tool => tool.location === 'shed');
+                },
+                
+                toolsInUse: (state) => {
+                    return state.tools.filter(tool => tool.location === 'in-use');
+                },
+                
+                totalTools: (state) => state.tools.length,
+                
+                lowSupplies: (state) => {
+                    return Object.entries(state.supplies)
+                        .filter(([item, amount]) => amount < 20)
+                        .map(([item]) => item);
+                },
+                
+                totalPlants: (state) => state.plants.length,
+                
+                plantsByType: (state) => {
+                    return state.plants.reduce((acc, plant) => {
+                        acc[plant.type] = (acc[plant.type] || 0) + 1;
+                        return acc;
+                    }, {});
+                },
+                
+                recentPlants: (state) => {
+                    return state.plants
+                        .sort((a, b) => b.planted - a.planted)
+                        .slice(0, 5);
+                }
+            },
+            
+            actions: {
+                borrowTool(toolId) {
+                    const tool = this.tools.find(t => t.id === toolId);
+                    if (tool && tool.location === 'shed') {
+                        tool.location = 'in-use';
+                        tool.user = 'Current User';
+                        return true;
+                    }
+                    return false;
+                },
+                
+                returnTool(toolId) {
+                    const tool = this.tools.find(t => t.id === toolId);
+                    if (tool) {
+                        tool.location = 'shed';
+                        tool.user = null;
+                        return true;
+                    }
+                    return false;
+                },
+                
+                addTool(toolData) {
+                    this.tools.push({
+                        id: Date.now(),
+                        location: 'shed',
+                        user: null,
+                        ...toolData
+                    });
+                },
+                
+                useSupplies(type, amount) {
+                    if (this.supplies[type] >= amount) {
+                        this.supplies[type] -= amount;
+                        return true;
+                    }
+                    return false;
+                },
+                
+                restockSupplies(type, amount) {
+                    this.supplies[type] += amount;
+                },
+                
+                plantSeed(plantData) {
+                    if (this.supplies.seeds > 0) {
+                        this.supplies.seeds--;
+                        this.plants.push({
+                            id: Date.now(),
+                            planted: new Date(),
+                            ...plantData
+                        });
+                        return true;
+                    }
+                    return false;
+                },
+                
+                harvestPlant(plantId) {
+                    const index = this.plants.findIndex(p => p.id === plantId);
+                    if (index > -1) {
+                        this.plants.splice(index, 1);
+                        // Could add to a 'harvested' array here
+                        return true;
+                    }
+                    return false;
+                },
+                
+                changeSeason(season) {
+                    this.currentSeason = season;
+                    // Adjust garden health based on season
+                    const seasonEffects = {
+                        'Spring': 10,
+                        'Summer': 5,
+                        'Fall': -5,
+                        'Winter': -15
+                    };
+                    this.gardenHealth = Math.max(0, Math.min(100, 
+                        this.gardenHealth + seasonEffects[season]));
+                }
+            }
+        });
+        
+        // Create app
+        const app = createApp({
+            setup() {
+                const store = useGardenStore();
+                
+                return {
+                    // State
+                    showAddTool: Vue.ref(false),
+                    showPlantModal: Vue.ref(false),
+                    newTool: Vue.ref({ name: '', category: 'Hand Tool' }),
+                    newPlant: Vue.ref({ name: '', type: 'vegetable', location: '' }),
+                    
+                    // Store state and getters
+                    tools: Vue.computed(() => store.tools),
+                    availableTools: Vue.computed(() => store.availableTools),
+                    toolsInUse: Vue.computed(() => store.toolsInUse),
+                    totalTools: Vue.computed(() => store.totalTools),
+                    availableToolsCount: Vue.computed(() => store.availableTools.length),
+                    
+                    supplies: Vue.computed(() => store.supplies),
+                    lowSupplies: Vue.computed(() => store.lowSupplies),
+                    
+                    plants: Vue.computed(() => store.plants),
+                    totalPlants: Vue.computed(() => store.totalPlants),
+                    plantsByType: Vue.computed(() => store.plantsByType),
+                    recentPlants: Vue.computed(() => store.recentPlants),
+                    
+                    currentSeason: Vue.computed(() => store.currentSeason),
+                    gardenHealth: Vue.computed(() => store.gardenHealth),
+                    
+                    // Computed
+                    seasonalTasks: Vue.computed(() => {
+                        const tasks = {
+                            'Spring': ['Plant new seeds', 'Prune winter damage', 'Fertilize beds'],
+                            'Summer': ['Water daily', 'Harvest vegetables', 'Deadhead flowers'],
+                            'Fall': ['Rake leaves', 'Plant bulbs', 'Prepare for frost'],
+                            'Winter': ['Plan next year', 'Maintain tools', 'Order seed catalogs']
+                        };
+                        return tasks[store.currentSeason] || [];
+                    }),
+                    
+                    // Methods
+                    borrowTool(toolId) {
+                        if (store.borrowTool(toolId)) {
+                            console.log('Tool borrowed!');
+                        }
+                    },
+                    
+                    returnTool(toolId) {
+                        store.returnTool(toolId);
+                    },
+                    
+                    addNewTool() {
+                        if (this.newTool.name) {
+                            store.addTool(this.newTool);
+                            this.newTool = { name: '', category: 'Hand Tool' };
+                            this.showAddTool = false;
+                        }
+                    },
+                    
+                    useSupply(type, amount) {
+                        if (!store.useSupplies(type, amount)) {
+                            alert(`Not enough ${type}!`);
+                        }
+                    },
+                    
+                    restockSupply(type, amount) {
+                        store.restockSupplies(type, amount);
+                    },
+                    
+                    plantNewSeed() {
+                        if (this.newPlant.name && this.newPlant.location) {
+                            if (store.plantSeed(this.newPlant)) {
+                                this.newPlant = { name: '', type: 'vegetable', location: '' };
+                                this.showPlantModal = false;
+                            } else {
+                                alert('No seeds available!');
+                            }
+                        }
+                    },
+                    
+                    harvestPlant(plantId) {
+                        if (confirm('Harvest this plant?')) {
+                            store.harvestPlant(plantId);
+                        }
+                    },
+                    
+                    changeSeason(season) {
+                        store.changeSeason(season);
+                    },
+                    
+                    // Utilities
+                    capitalize(str) {
+                        return str.charAt(0).toUpperCase() + str.slice(1);
+                    },
+                    
+                    formatDate(date) {
+                        return new Date(date).toLocaleDateString();
+                    }
+                };
+            }
+        });
+        
+        // Create and use Pinia
+        const pinia = createPinia();
+        app.use(pinia);
+        
+        app.mount('#app');
+    </script>
+</body>
+</html>
+#+END_SRC
+
+* Advanced Tool Shed Techniques
+
+** Persisting Your Tool Inventory
+
+Save your tool shed state to localStorage:
+
+#+BEGIN_SRC javascript
+// plugins/persistedState.js
+export function createPersistedState() {
+    return (context) => {
+        // Load saved state on store creation
+        const savedState = localStorage.getItem(context.store.$id);
+        if (savedState) {
+            context.store.$patch(JSON.parse(savedState));
+        }
+        
+        // Save state on every change
+        context.store.$subscribe((mutation, state) => {
+            localStorage.setItem(context.store.$id, JSON.stringify(state));
+        });
+    };
+}
+
+// Use in store
+const useGardenStore = defineStore('garden', {
+    // ... store definition
+    
+    // Add plugin
+    plugins: [createPersistedState()]
+});
+#+END_SRC
+
+** Tool Sharing Between Stores
+
+Stores can interact with each other:
+
+#+BEGIN_SRC javascript
+// stores/irrigation.js
+export const useIrrigationStore = defineStore('irrigation', {
+    actions: {
+        waterGarden() {
+            const gardenStore = useGardenStore();
+            
+            // Check water supply in garden store
+            if (gardenStore.supplies.water >= 50) {
+                gardenStore.useSupplies('water', 50);
+                this.lastWatered = new Date();
+                return true;
+            }
+            return false;
+        }
+    }
+});
+#+END_SRC
+
+** DevTools Integration
+
+Pinia integrates beautifully with Vue DevTools:
+
+#+BEGIN_SRC javascript
+// In development, you can inspect:
+// - Current state of all stores
+// - Action history
+// - Time-travel debugging
+// - State snapshots
+
+// You can also manually inspect in code:
+const store = useGardenStore();
+
+// Subscribe to changes
+store.$subscribe((mutation, state) => {
+    console.log('Store changed:', mutation);
+    console.log('New state:', state);
+});
+
+// Subscribe to actions
+store.$onAction(({
+    name,       // name of the action
+    store,      // store instance
+    args,       // array of parameters
+    after,      // hook after action returns
+    onError    // hook if action throws
+}) => {
+    console.log(`Action ${name} called with`, args);
+    
+    after((result) => {
+        console.log(`Action ${name} finished with`, result);
+    });
+    
+    onError((error) => {
+        console.error(`Action ${name} failed:`, error);
+    });
+});
+#+END_SRC
+
+* Exercises: Organizing Your Shed
+
+** Exercise 1: The Garden Journal
+Create a store that tracks:
+- Daily garden activities
+- Plant growth measurements
+- Weather observations
+- Photo attachments
+- Searchable history
+
+** Exercise 2: The Seed Library
+Build a seed management system:
+- Seed inventory with expiration dates
+- Planting history
+- Success rate tracking
+- Seed swap requests between gardeners
+
+** Exercise 3: The Watering Schedule
+Implement an irrigation scheduler:
+- Zone-based watering times
+- Weather-responsive adjustments
+- Water usage tracking
+- Drought alerts
+
+** Exercise 4: The Harvest Tracker
+Create a harvest management store:
+- Track what's ready to harvest
+- Record harvest amounts
+- Calculate garden productivity
+- Share surplus with community
+
+* Closing Thoughts
+
+You've organized your tool shed. No more searching for that missing 
+trowel, no more wondering who has the wheelbarrow, no more buying 
+duplicate supplies. Everything has its place, and every gardener knows 
+where to find what they need.
+
+With Pinia (or Vuex), you've learned:
+- Centralized state management
+- Getters for computed store values
+- Actions for store operations
+- Modular organization patterns
+- Store persistence and DevTools integration
+
+Your garden now has a proper tool shed—a single source of truth where 
+all your important data lives, organized, accessible, and shared among 
+all who tend the garden.
+
+But there's a modern technique that can make our gardening even more 
+efficient. In the next chapter, we'll learn about composting—the 
+Composition API—where we recycle and reuse logic to create rich, 
+sustainable patterns.
+
+For now, take inventory of your tools. Check your supplies. Appreciate 
+the order you've brought to your garden's operations.
+
+---
+
+/The tool shed door closes with satisfaction. Every tool in its place,/
+/every supply accounted for. Tomorrow, we'll learn the art of composting—/
+/turning old code into rich, reusable patterns./

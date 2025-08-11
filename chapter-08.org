@@ -1,0 +1,818 @@
+#+TITLE: Chapter 8: Garden Party
+#+SUBTITLE: Testing & Best Practices - Sharing Your Garden with the World
+
+* Chapter 8: Garden Party (Testing & Community)
+
+The garden is complete. Paths wind through flower beds, vegetables grow 
+in neat rows, the greenhouse hums with activity. Now it's time to invite 
+others—to test your garden's resilience, share your techniques, and 
+celebrate what you've grown.
+
+A garden party isn't just celebration; it's validation. Will the paths 
+hold up to foot traffic? Can guests find their way? Will your careful 
+planning delight visitors? Testing ensures your garden is ready. Best 
+practices ensure it stays beautiful for years to come.
+
+Let's prepare for guests.
+
+* Inviting Guests (Unit Testing)
+
+Unit tests are like inviting a few close friends first. They examine 
+individual plants, checking that each component works perfectly in 
+isolation.
+
+** Setting Up the Guest List (Test Environment)
+
+#+BEGIN_SRC bash
+# Install testing tools (party supplies)
+npm install -D vitest @vue/test-utils @testing-library/vue happy-dom
+
+# Configure Vitest
+npm install -D @vitest/ui
+#+END_SRC
+
+** Your First Garden Inspection
+
+#+BEGIN_SRC javascript
+// vitest.config.js - Test configuration
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+
+export default defineConfig({
+  plugins: [vue()],
+  test: {
+    globals: true,
+    environment: 'happy-dom',
+    setupFiles: './src/test-setup.js',
+    coverage: {
+      reporter: ['text', 'json', 'html'],
+      exclude: ['node_modules/', 'test/']
+    }
+  }
+});
+#+END_SRC
+
+** Testing Individual Plants (Component Tests)
+
+#+BEGIN_SRC javascript
+// src/components/__tests__/FlowerBed.spec.js
+import { describe, it, expect, beforeEach } from 'vitest';
+import { mount } from '@vue/test-utils';
+import FlowerBed from '../FlowerBed.vue';
+
+describe('FlowerBed Component', () => {
+  let wrapper;
+  
+  beforeEach(() => {
+    wrapper = mount(FlowerBed, {
+      props: {
+        type: 'roses',
+        waterLevel: 75
+      }
+    });
+  });
+  
+  it('should display the correct flower type', () => {
+    expect(wrapper.text()).toContain('roses');
+  });
+  
+  it('should show healthy status when water level is good', () => {
+    expect(wrapper.find('.health-status').text()).toBe('Healthy');
+  });
+  
+  it('should warn when water level is low', async () => {
+    await wrapper.setProps({ waterLevel: 20 });
+    expect(wrapper.find('.health-status').classes()).toContain('warning');
+  });
+  
+  it('should emit water event when water button is clicked', async () => {
+    await wrapper.find('button.water-btn').trigger('click');
+    expect(wrapper.emitted('water')).toHaveLength(1);
+    expect(wrapper.emitted('water')[0]).toEqual([10]); // 10 units of water
+  });
+  
+  it('should calculate growth correctly', () => {
+    const vm = wrapper.vm;
+    expect(vm.calculateGrowth(5, 80)).toBe(15); // 5 days * 3 growth rate
+  });
+});
+#+END_SRC
+
+** Testing Garden Tools (Composable Tests)
+
+#+BEGIN_SRC javascript
+// src/composables/__tests__/useGarden.spec.js
+import { describe, it, expect, beforeEach } from 'vitest';
+import { useGarden } from '../useGarden';
+
+describe('useGarden Composable', () => {
+  let garden;
+  
+  beforeEach(() => {
+    garden = useGarden();
+  });
+  
+  it('should initialize with default values', () => {
+    expect(garden.plants.value).toEqual([]);
+    expect(garden.waterSupply.value).toBe(100);
+    expect(garden.season.value).toBe('Spring');
+  });
+  
+  it('should add plants correctly', () => {
+    garden.addPlant({ name: 'Tomato', type: 'vegetable' });
+    
+    expect(garden.plants.value).toHaveLength(1);
+    expect(garden.plants.value[0].name).toBe('Tomato');
+  });
+  
+  it('should use water when watering plants', () => {
+    garden.addPlant({ name: 'Rose', waterNeeds: 20 });
+    garden.waterPlant(0);
+    
+    expect(garden.waterSupply.value).toBe(80);
+  });
+  
+  it('should not water if insufficient supply', () => {
+    garden.waterSupply.value = 5;
+    garden.addPlant({ name: 'Thirsty Plant', waterNeeds: 20 });
+    
+    const result = garden.waterPlant(0);
+    expect(result).toBe(false);
+    expect(garden.waterSupply.value).toBe(5);
+  });
+  
+  it('should change seasons correctly', () => {
+    garden.nextSeason();
+    expect(garden.season.value).toBe('Summer');
+    
+    garden.nextSeason();
+    expect(garden.season.value).toBe('Fall');
+  });
+  
+  it('should calculate garden health', () => {
+    garden.addPlant({ name: 'Healthy', health: 100 });
+    garden.addPlant({ name: 'Sick', health: 50 });
+    
+    expect(garden.averageHealth.value).toBe(75);
+  });
+});
+#+END_SRC
+
+** Testing the Tool Shed (Store Tests)
+
+#+BEGIN_SRC javascript
+// src/stores/__tests__/garden.spec.js
+import { describe, it, expect, beforeEach } from 'vitest';
+import { setActivePinia, createPinia } from 'pinia';
+import { useGardenStore } from '../garden';
+
+describe('Garden Store', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+  });
+  
+  it('should manage tool inventory', () => {
+    const store = useGardenStore();
+    
+    // Add a tool
+    store.addTool({ name: 'Spade', category: 'digging' });
+    expect(store.tools).toHaveLength(1);
+    
+    // Borrow tool
+    store.borrowTool(store.tools[0].id, 'John');
+    expect(store.tools[0].available).toBe(false);
+    expect(store.tools[0].borrower).toBe('John');
+    
+    // Return tool
+    store.returnTool(store.tools[0].id);
+    expect(store.tools[0].available).toBe(true);
+  });
+  
+  it('should track supplies', () => {
+    const store = useGardenStore();
+    
+    store.useSupply('seeds', 5);
+    expect(store.supplies.seeds).toBe(45); // Started with 50
+    
+    store.restockSupply('seeds', 20);
+    expect(store.supplies.seeds).toBe(65);
+  });
+  
+  it('should calculate low supplies', () => {
+    const store = useGardenStore();
+    
+    store.supplies.water = 5;
+    store.supplies.fertilizer = 100;
+    
+    expect(store.lowSupplies).toContain('water');
+    expect(store.lowSupplies).not.toContain('fertilizer');
+  });
+});
+#+END_SRC
+
+* Garden Tours (E2E Testing)
+
+End-to-end tests are like full garden tours. Guests walk the complete 
+paths, experiencing your garden as real visitors would.
+
+** Setting Up Tour Routes (Cypress)
+
+#+BEGIN_SRC bash
+# Install Cypress (tour guide system)
+npm install -D cypress
+
+# Add to package.json
+"scripts": {
+  "test:e2e": "cypress open",
+  "test:e2e:ci": "cypress run"
+}
+#+END_SRC
+
+** Guided Garden Tours
+
+#+BEGIN_SRC javascript
+// cypress/e2e/garden-tour.cy.js
+describe('Complete Garden Tour', () => {
+  beforeEach(() => {
+    cy.visit('/');
+  });
+  
+  it('should navigate through the garden', () => {
+    // Enter the garden
+    cy.contains('Welcome to Vue Garden').should('be.visible');
+    
+    // Walk to the vegetable patch
+    cy.get('[data-test="nav-vegetables"]').click();
+    cy.url().should('include', '/vegetables');
+    cy.contains('Vegetable Garden').should('be.visible');
+    
+    // Plant a tomato
+    cy.get('[data-test="plant-select"]').select('Tomato');
+    cy.get('[data-test="plant-btn"]').click();
+    cy.get('[data-test="plant-list"]').should('contain', 'Tomato');
+    
+    // Water the plants
+    cy.get('[data-test="water-all-btn"]').click();
+    cy.get('[data-test="water-level"]').should('contain', '80');
+    
+    // Check plant health
+    cy.get('[data-test="plant-health"]').first().should('have.class', 'healthy');
+  });
+  
+  it('should handle the watering system', () => {
+    cy.visit('/irrigation');
+    
+    // Check initial water level
+    cy.get('[data-test="water-tank"]').should('contain', '100');
+    
+    // Set up automatic watering
+    cy.get('[data-test="auto-water-toggle"]').click();
+    cy.get('[data-test="auto-water-status"]').should('contain', 'Active');
+    
+    // Wait for automatic watering
+    cy.wait(5000);
+    cy.get('[data-test="water-tank"]').should('not.contain', '100');
+  });
+  
+  it('should manage the greenhouse', () => {
+    cy.visit('/greenhouse');
+    
+    // Adjust temperature
+    cy.get('[data-test="temp-slider"]').invoke('val', 75).trigger('input');
+    cy.get('[data-test="temp-display"]').should('contain', '75°F');
+    
+    // Check plant response
+    cy.get('[data-test="plant-status"]').should('contain', 'Optimal');
+    
+    // Open vents when too hot
+    cy.get('[data-test="temp-slider"]').invoke('val', 95).trigger('input');
+    cy.get('[data-test="vent-status"]').should('contain', 'Open');
+  });
+});
+#+END_SRC
+
+** Testing User Journeys
+
+#+BEGIN_SRC javascript
+// cypress/e2e/user-journey.cy.js
+describe('New Gardener Journey', () => {
+  it('should guide a new gardener through setup', () => {
+    // First visit
+    cy.visit('/');
+    cy.get('[data-test="welcome-modal"]').should('be.visible');
+    
+    // Start tutorial
+    cy.get('[data-test="start-tutorial"]').click();
+    
+    // Tutorial step 1: Choose garden type
+    cy.get('[data-test="garden-type"]').select('Vegetable');
+    cy.get('[data-test="next-step"]').click();
+    
+    // Tutorial step 2: Set location
+    cy.get('[data-test="climate-zone"]').select('Temperate');
+    cy.get('[data-test="next-step"]').click();
+    
+    // Tutorial step 3: Plant first seed
+    cy.get('[data-test="first-plant"]').select('Lettuce');
+    cy.get('[data-test="plant-it"]').click();
+    
+    // Verify garden is set up
+    cy.get('[data-test="garden-summary"]').should('contain', 'Vegetable Garden');
+    cy.get('[data-test="plant-count"]').should('contain', '1');
+  });
+  
+  it('should handle a complete growing season', () => {
+    cy.visit('/garden');
+    
+    // Spring planting
+    cy.get('[data-test="season"]').should('contain', 'Spring');
+    cy.get('[data-test="plant-seeds"]').click();
+    
+    // Summer care
+    cy.get('[data-test="advance-season"]').click();
+    cy.get('[data-test="season"]').should('contain', 'Summer');
+    cy.get('[data-test="water-plants"]').click();
+    cy.get('[data-test="fertilize"]').click();
+    
+    // Fall harvest
+    cy.get('[data-test="advance-season"]').click();
+    cy.get('[data-test="harvest-btn"]').should('be.enabled');
+    cy.get('[data-test="harvest-btn"]').click();
+    cy.get('[data-test="harvest-count"]').should('not.contain', '0');
+  });
+});
+#+END_SRC
+
+* Sharing Seeds (Component Libraries)
+
+Your garden has unique plants worth sharing. Package them for others to grow.
+
+** Creating a Seed Packet Library
+
+#+BEGIN_SRC javascript
+// packages/vue-garden-ui/index.js
+import GardenButton from './components/GardenButton.vue';
+import FlowerCard from './components/FlowerCard.vue';
+import PlantGrid from './components/PlantGrid.vue';
+import WateringCan from './components/WateringCan.vue';
+
+// Individual exports
+export {
+  GardenButton,
+  FlowerCard,
+  PlantGrid,
+  WateringCan
+};
+
+// Install function for Vue.use()
+export default {
+  install(app) {
+    app.component('GardenButton', GardenButton);
+    app.component('FlowerCard', FlowerCard);
+    app.component('PlantGrid', PlantGrid);
+    app.component('WateringCan', WateringCan);
+  }
+};
+#+END_SRC
+
+** Documenting Your Seeds (Storybook)
+
+#+BEGIN_SRC javascript
+// .storybook/main.js
+module.exports = {
+  stories: ['../src/**/*.stories.@(js|jsx|ts|tsx)'],
+  addons: [
+    '@storybook/addon-essentials',
+    '@storybook/addon-links'
+  ],
+  framework: '@storybook/vue3'
+};
+
+// src/components/GardenButton.stories.js
+import GardenButton from './GardenButton.vue';
+
+export default {
+  title: 'Garden/Button',
+  component: GardenButton,
+  argTypes: {
+    variant: {
+      control: { type: 'select' },
+      options: ['primary', 'secondary', 'danger']
+    },
+    size: {
+      control: { type: 'select' },
+      options: ['small', 'medium', 'large']
+    }
+  }
+};
+
+const Template = (args) => ({
+  components: { GardenButton },
+  setup() {
+    return { args };
+  },
+  template: '<GardenButton v-bind="args">Plant Seed</GardenButton>'
+});
+
+export const Primary = Template.bind({});
+Primary.args = {
+  variant: 'primary',
+  size: 'medium'
+};
+
+export const Large = Template.bind({});
+Large.args = {
+  variant: 'secondary',
+  size: 'large'
+};
+#+END_SRC
+
+* Garden Club (Best Practices)
+
+Experienced gardeners share wisdom. Here are Vue garden best practices 
+refined by the community:
+
+** Component Gardening Guidelines
+
+#+BEGIN_SRC vue
+<!-- GOOD: Single responsibility -->
+<template>
+  <div class="plant-card">
+    <PlantImage :src="plant.image" :alt="plant.name" />
+    <PlantInfo :plant="plant" />
+    <PlantActions 
+      @water="$emit('water')"
+      @fertilize="$emit('fertilize')"
+    />
+  </div>
+</template>
+
+<!-- AVOID: Monolithic components -->
+<template>
+  <div class="everything">
+    <!-- 500 lines of template -->
+  </div>
+</template>
+
+<script setup>
+// GOOD: Composition and separation
+import { usePlantGrowth } from '@/composables/usePlantGrowth';
+import { usePlantHealth } from '@/composables/usePlantHealth';
+
+const props = defineProps({
+  plantId: {
+    type: String,
+    required: true,
+    validator: (value) => value.length > 0
+  }
+});
+
+const { growth, grow } = usePlantGrowth(props.plantId);
+const { health, diagnose } = usePlantHealth(props.plantId);
+
+// AVOID: Everything in one place
+// 300 lines of mixed logic
+</script>
+#+END_SRC
+
+** State Garden Patterns
+
+#+BEGIN_SRC javascript
+// GOOD: Normalized state
+const gardenStore = {
+  state: () => ({
+    plants: {
+      byId: {
+        'p1': { id: 'p1', name: 'Tomato', bedId: 'b1' },
+        'p2': { id: 'p2', name: 'Basil', bedId: 'b1' }
+      },
+      allIds: ['p1', 'p2']
+    },
+    beds: {
+      byId: {
+        'b1': { id: 'b1', name: 'Herb Garden', plantIds: ['p1', 'p2'] }
+      },
+      allIds: ['b1']
+    }
+  })
+};
+
+// AVOID: Deeply nested state
+const badStore = {
+  state: () => ({
+    gardens: [
+      {
+        beds: [
+          {
+            plants: [
+              { /* deeply nested */ }
+            ]
+          }
+        ]
+      }
+    ]
+  })
+};
+#+END_SRC
+
+** Performance Gardening
+
+#+BEGIN_SRC vue
+<script setup>
+// GOOD: Lazy load heavy components
+import { defineAsyncComponent } from 'vue';
+
+const HeavyGreenhouse = defineAsyncComponent(() =>
+  import('./components/HeavyGreenhouse.vue')
+);
+
+// GOOD: Debounce expensive operations
+import { debounce } from 'lodash-es';
+
+const searchPlants = debounce((query) => {
+  // Expensive search
+}, 300);
+
+// GOOD: Use shallowRef for large objects that change completely
+import { shallowRef } from 'vue';
+
+const largeGardenData = shallowRef(initialData);
+
+// GOOD: Virtualize long lists
+import { VirtualList } from '@tanstack/vue-virtual';
+</script>
+
+<template>
+  <!-- GOOD: Use v-once for static content -->
+  <div v-once>
+    <h1>{{ staticGardenTitle }}</h1>
+  </div>
+  
+  <!-- GOOD: Use :key properly -->
+  <div v-for="plant in plants" :key="plant.id">
+    {{ plant.name }}
+  </div>
+  
+  <!-- GOOD: Lazy load images -->
+  <img 
+    v-lazy="plant.image"
+    :alt="plant.name"
+  >
+</template>
+#+END_SRC
+
+** Accessibility Garden
+
+#+BEGIN_SRC vue
+<template>
+  <!-- GOOD: Semantic HTML and ARIA -->
+  <nav aria-label="Garden sections">
+    <ul role="list">
+      <li role="listitem">
+        <router-link 
+          to="/vegetables"
+          :aria-current="$route.path === '/vegetables' ? 'page' : undefined"
+        >
+          Vegetables
+        </router-link>
+      </li>
+    </ul>
+  </nav>
+  
+  <!-- GOOD: Form accessibility -->
+  <form @submit.prevent="plantSeed" aria-labelledby="form-title">
+    <h2 id="form-title">Plant a New Seed</h2>
+    
+    <label for="seed-type">
+      Seed Type
+      <span aria-label="required">*</span>
+    </label>
+    <select 
+      id="seed-type"
+      v-model="seedType"
+      required
+      aria-describedby="seed-help"
+    >
+      <option value="">Choose a seed...</option>
+      <option value="tomato">Tomato</option>
+    </select>
+    <span id="seed-help" class="help-text">
+      Select the type of seed to plant
+    </span>
+    
+    <button 
+      type="submit"
+      :disabled="!seedType"
+      :aria-busy="isPlanting"
+    >
+      {{ isPlanting ? 'Planting...' : 'Plant Seed' }}
+    </button>
+  </form>
+  
+  <!-- GOOD: Status messages -->
+  <div 
+    role="status"
+    aria-live="polite"
+    aria-atomic="true"
+  >
+    {{ statusMessage }}
+  </div>
+</template>
+#+END_SRC
+
+** Security Garden Fence
+
+#+BEGIN_SRC javascript
+// GOOD: Sanitize user input
+import DOMPurify from 'dompurify';
+
+const sanitizedContent = DOMPurify.sanitize(userInput);
+
+// GOOD: Validate all inputs
+const validatePlantData = (data) => {
+  const errors = [];
+  
+  if (!data.name || data.name.length > 100) {
+    errors.push('Invalid plant name');
+  }
+  
+  if (data.waterNeeds < 0 || data.waterNeeds > 100) {
+    errors.push('Water needs must be 0-100');
+  }
+  
+  return errors;
+};
+
+// GOOD: Use environment variables for sensitive data
+const apiKey = import.meta.env.VITE_GARDEN_API_KEY;
+
+// NEVER: Expose sensitive data in code
+// const apiKey = 'sk_live_abcd1234'; // DON'T DO THIS!
+
+// GOOD: Implement CSP headers
+// In your server configuration:
+// Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline';
+#+END_SRC
+
+* Garden Maintenance Schedule
+
+Regular maintenance keeps your garden healthy:
+
+#+BEGIN_SRC javascript
+// maintenance-checklist.js
+export const maintenanceSchedule = {
+  daily: [
+    'Run unit tests before committing',
+    'Check console for errors',
+    'Review performance metrics'
+  ],
+  
+  weekly: [
+    'Update dependencies (minor versions)',
+    'Run full test suite',
+    'Review and refactor one component',
+    'Check accessibility with screen reader'
+  ],
+  
+  monthly: [
+    'Audit bundle size',
+    'Update dependencies (major versions)',
+    'Performance profiling',
+    'Security audit',
+    'Review and update documentation'
+  ],
+  
+  seasonal: [
+    'Major refactoring if needed',
+    'Upgrade Vue version',
+    'Review architecture decisions',
+    'Plan next features'
+  ]
+};
+#+END_SRC
+
+* Complete Testing Garden
+
+Here's a complete testing setup for your Vue garden:
+
+#+BEGIN_SRC javascript
+// test-utils/garden-test-helpers.js
+import { mount } from '@vue/test-utils';
+import { createTestingPinia } from '@pinia/testing';
+import { vi } from 'vitest';
+
+export function mountWithGarden(component, options = {}) {
+  return mount(component, {
+    global: {
+      plugins: [
+        createTestingPinia({
+          createSpy: vi.fn,
+          initialState: {
+            garden: {
+              plants: [],
+              waterLevel: 100,
+              ...options.initialState
+            }
+          }
+        })
+      ],
+      stubs: {
+        teleport: true,
+        ...options.stubs
+      },
+      mocks: {
+        $t: (key) => key, // Mock translations
+        ...options.mocks
+      }
+    },
+    ...options
+  });
+}
+
+// Custom matchers
+expect.extend({
+  toBeHealthyPlant(received) {
+    const pass = received.health > 70 && received.water > 30;
+    return {
+      pass,
+      message: () => 
+        `expected plant to ${pass ? 'not ' : ''}be healthy`
+    };
+  }
+});
+
+// Test data factories
+export const createPlant = (overrides = {}) => ({
+  id: Math.random().toString(),
+  name: 'Test Plant',
+  type: 'vegetable',
+  health: 100,
+  water: 50,
+  planted: new Date(),
+  ...overrides
+});
+
+export const createGarden = (overrides = {}) => ({
+  id: Math.random().toString(),
+  name: 'Test Garden',
+  plants: [],
+  climate: 'temperate',
+  ...overrides
+});
+#+END_SRC
+
+* Exercises: Hosting Your Garden Party
+
+** Exercise 1: Test Coverage Garden
+Achieve 80% test coverage:
+- Write unit tests for all components
+- Test all store actions and getters
+- Add integration tests for critical paths
+- Set up coverage reporting
+
+** Exercise 2: Performance Testing
+Build performance tests:
+- Measure component render times
+- Test with large data sets
+- Profile memory usage
+- Set up performance budgets
+
+** Exercise 3: Accessibility Audit
+Ensure everyone can enjoy your garden:
+- Test with screen readers
+- Verify keyboard navigation
+- Check color contrast
+- Add ARIA labels
+
+** Exercise 4: Documentation Garden
+Create comprehensive documentation:
+- Component documentation with examples
+- API documentation
+- Setup and deployment guides
+- Contributing guidelines
+
+* Closing Thoughts
+
+Your garden party was a success. Guests tested every path, examined every 
+plant, and found your garden delightful. Through testing, you've ensured 
+that your Vue garden isn't just beautiful—it's robust, accessible, and 
+maintainable.
+
+You've learned:
+- Unit testing components and composables
+- End-to-end testing with Cypress
+- Creating component libraries
+- Best practices for maintainable code
+- Performance and accessibility considerations
+
+Your garden is no longer just yours. It's been tested by the community, 
+documented for future gardeners, and built to last through many seasons.
+
+The party winds down as the sun sets. Tomorrow brings the harvest—the 
+culmination of all your work.
+
+---
+
+/Lanterns glow in the evening garden. Guests depart with seeds and/
+/cuttings, ready to start their own Vue gardens. Your knowledge has/
+/been shared, your techniques validated. The garden lives on./

@@ -1,0 +1,114 @@
+#+TITLE: Vue Garden: Growing Web Applications from Seed to Harvest
+#+AUTHOR: A Collaborative Creation
+#+DATE: 2025
+
+* Title Page
+
+** Vue Garden
+*** Growing Web Applications from Seed to Harvest
+
+A gentle introduction to Vue.js through the metaphor of gardening,
+where components bloom, state flows like water, and applications
+grow strong with proper care and attention.
+
+* Copyright
+
+Copyright © 2025
+
+This book is a collaborative work, created with care and attention
+like a well-tended garden. 
+
+All code examples in this book are released under the MIT License.
+You are free to plant these seeds in your own digital gardens.
+
+* Dedication
+
+To all the digital gardeners who tend their code with patience and care,
+who know that the best applications, like the best gardens, grow not
+from haste but from understanding.
+
+And to those just picking up their first digital trowel—
+may your Vue gardens flourish.
+
+* Acknowledgments
+
+Like any garden, this book grew with the help of many:
+
+- The Vue.js core team, who created the fertile framework upon which we build
+- The open-source community, whose shared knowledge is like compost enriching our soil
+- Every developer who asked "but why?" and helped us dig deeper
+- You, dear reader, for choosing to begin this journey
+
+* Table of Contents
+
+** Introduction: Welcome to Your Vue Garden
+   - Why gardens and Vue make perfect companions
+   - What you'll grow in this book
+   - Tools you'll need for your garden
+   - How to read this book
+
+** Part I: Preparing the Ground
+
+*** Chapter 1: Preparing the Soil (Vue Fundamentals)
+    - Understanding your garden plot (The DOM)
+    - Testing the soil (Development environment)
+    - Your first seedling (Hello Vue)
+    - The garden blueprint (Vue instance)
+
+*** Chapter 2: Planting Seeds (Components)
+    - Understanding seeds (What are components?)
+    - Single seeds (Single-file components)
+    - Seed packets (Component organization)
+    - Transplanting (Props and events)
+
+*** Chapter 3: The Watering System (Reactivity)
+    - How water flows (Vue's reactivity system)
+    - Irrigation channels (Computed properties)
+    - Weather watching (Watchers)
+    - Moisture control (v-model)
+
+** Part II: Growing Your Garden
+
+*** Chapter 4: Garden Paths (Routing)
+    - Planning pathways (Vue Router basics)
+    - Stepping stones (Route parameters)
+    - Garden gates (Navigation guards)
+    - Secret gardens (Nested routes)
+
+*** Chapter 5: The Tool Shed (State Management)
+    - Organizing your tools (Why state management?)
+    - The community shed (Pinia/Vuex)
+    - Tool maintenance (Mutations and actions)
+    - Inventory lists (Getters)
+
+*** Chapter 6: Composting (Composition API)
+    - Rich soil amendment (Setup function)
+    - Nutrient mixing (Composables)
+    - Recycling garden waste (Reusable logic)
+    - Modern gardening techniques (Script setup)
+
+** Part III: The Growing Season
+
+*** Chapter 7: The Greenhouse (Build Tools & Deployment)
+    - Climate control (Vite/Webpack)
+    - Propagation techniques (Building for production)
+    - Transplanting to the outdoors (Deployment)
+    - Season extension (Performance optimization)
+
+*** Chapter 8: Garden Party (Testing & Community)
+    - Inviting guests (Unit testing)
+    - Garden tours (E2E testing)
+    - Sharing seeds (Component libraries)
+    - Garden club (Best practices)
+
+** Epilogue: Harvest Time
+   - What you've grown
+   - Continuing your garden
+   - Sharing your harvest
+
+** Appendices
+*** Appendix A: Garden Glossary
+*** Appendix B: Seasonal Resources
+*** Appendix C: Troubleshooting Common Pests
+
+** Colophon: How This Book Grew
